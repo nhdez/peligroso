@@ -648,6 +648,15 @@ export const TrucoGame: Game<TrucoGameState> = {
         events.endTurn({ next: G.manoID });
       }
     },
+
+    reorderHand: ({ G, playerID }, { fromIndex, toIndex }: { fromIndex: number; toIndex: number }) => {
+      const hand = G.hands[playerID!];
+      if (!hand || fromIndex < 0 || fromIndex >= hand.length || toIndex < 0 || toIndex >= hand.length) return;
+      if (fromIndex === toIndex) return;
+      const [movedCard] = hand.splice(fromIndex, 1);
+      hand.splice(toIndex, 0, movedCard);
+      addLog(G, `Player ${playerID} shuffled their hand cards.`);
+    },
   },
 
 

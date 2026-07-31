@@ -39,6 +39,8 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
   const { t } = useI18n();
   const [isDragging, setIsDragging] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [hoveredCardId, setHoveredCardId] = useState<string | null>(null);
+  const [draggedCardIndex, setDraggedCardIndex] = useState<number | null>(null);
   const [myVideoStream, setMyVideoStream] = useState<MediaStream | null>(null);
 
 
@@ -687,23 +689,40 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
                       isCurrentTurn={ctx.currentPlayer === opponentID}
                     />
 
-                    {/* Opponent Face-down Hand Cards using selected deck cardBackUrl */}
-                    <div style={{ display: "flex", gap: "6px" }}>
-                      {(G.hands[opponentID] || []).map((_, idx) => (
-                        <div
-                          key={`opp-hand-back-${idx}`}
-                          style={{
-                            width: "32px",
-                            height: "48px",
-                            borderRadius: "6px",
-                            background: activeDeckTheme.cardBackUrl.startsWith("http") || activeDeckTheme.cardBackUrl.startsWith("data:")
-                              ? `url("${activeDeckTheme.cardBackUrl}") center/cover`
-                              : activeDeckTheme.cardBackUrl,
-                            border: "1px solid rgba(255, 255, 255, 0.3)",
-                            boxShadow: "0 2px 6px rgba(0,0,0,0.5)",
-                          }}
-                        />
-                      ))}
+                    {/* Opponent Fan Hand Display (Face-down cards synced live with reordering) */}
+                    <div style={{ display: "flex", justifyContent: "center", position: "relative", minWidth: "120px", height: "60px", padding: "0 10px" }}>
+                      {(G.hands[opponentID] || []).map((card, idx, arr) => {
+                        const total = arr.length;
+                        let angle = 0;
+                        let translateY = 0;
+                        if (total === 2) {
+                          angle = idx === 0 ? -8 : 8;
+                          translateY = 2;
+                        } else if (total >= 3) {
+                          angle = idx === 0 ? -12 : idx === 1 ? 0 : 12;
+                          translateY = idx === 1 ? 0 : 4;
+                        }
+
+                        return (
+                          <div
+                            key={`opp-fan-${card.id}-${idx}`}
+                            title="Opponent's Hand (Face Down)"
+                            style={{
+                              width: "38px",
+                              height: "56px",
+                              borderRadius: "6px",
+                              background: activeDeckTheme.cardBackUrl.startsWith("http") || activeDeckTheme.cardBackUrl.startsWith("data:")
+                                ? `url("${activeDeckTheme.cardBackUrl}") center/cover`
+                                : activeDeckTheme.cardBackUrl,
+                              border: "1px solid rgba(255, 255, 255, 0.3)",
+                              boxShadow: "0 6px 14px rgba(0,0,0,0.6)",
+                              transform: `translateY(${translateY}px) rotate(${angle}deg)`,
+                              margin: "0 -8px",
+                              transition: "all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                            }}
+                          />
+                        );
+                      })}
                     </div>
                   </div>
                   <div style={{ fontSize: "0.85rem", color: "#cbd5e1", marginBottom: "8px", textShadow: "0 1px 3px rgba(0,0,0,0.8)" }}>
@@ -870,43 +889,95 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
                 </div>
               )}
 
-              {/* My Cards Hand (HTML5 Draggable) */}
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "0.85rem", color: "#94a3b8", marginBottom: "8px" }}>
-                  {t("table.your_hand", { score: myEnvidoScore })}
+              {/* My Cards Hand (Fan Layout with Live Drag-to-Reorder & Drag-to-Play) */}
+              <div style={{ textAlign: "center", marginTop: "4px" }}>
+                <div style={{ fontSize: "0.85rem", color: "#94a3b8", marginBottom: "10px", display: "flex", justifyContent: "center", alignItems: "center", gap: "8px" }}>
+                  <span>{t("table.your_hand", { score: myEnvidoScore })}</span>
+                  <span style={{ fontSize: "0.75rem", color: "#f59e0b", background: "rgba(245, 158, 11, 0.15)", padding: "2px 8px", borderRadius: "10px", border: "1px solid rgba(245, 158, 11, 0.3)" }}>
+                    🔀 Drag cards to shuffle hand
+                  </span>
                 </div>
-                <div style={{ display: "flex", justifyContent: "center", gap: "12px" }}>
-                  {myHand.map((card) => (
-                    <div
-                      key={card.id}
-                      draggable={canPlayCards}
-                      onDragStart={(e) => {
-                        if (!canPlayCards) return;
-                        e.dataTransfer.setData("text/plain", card.id);
-                        e.dataTransfer.effectAllowed = "move";
-                        setIsDragging(true);
-                      }}
-                      onDragEnd={() => setIsDragging(false)}
-                      onClick={() => canPlayCards && moves.playCard(card.id)}
-                      style={{
-                        cursor: canPlayCards ? "grab" : "not-allowed",
-                        transition: "transform 0.15s ease",
-                        opacity: canPlayCards ? 1 : 0.7,
-                      }}
-                      onMouseEnter={(e) => {
-                        if (canPlayCards) {
-                          e.currentTarget.style.transform = "translateY(-8px)";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = "translateY(0)";
-                      }}
-                    >
-                      <RenderCard card={card} isPlayable={canPlayCards} cardFaces={activeDeckTheme?.cardFaces} />
-                    </div>
-                  ))}
+
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "flex-end",
+                    position: "relative",
+                    minHeight: "125px",
+                    padding: "0 20px",
+                  }}
+                >
+                  {myHand.map((card, idx, arr) => {
+                    const total = arr.length;
+                    const isHovered = hoveredCardId === card.id;
+
+                    // Compute fan angle & arc height
+                    let angle = 0;
+                    let translateY = 0;
+                    if (total === 2) {
+                      angle = idx === 0 ? -8 : 8;
+                      translateY = 2;
+                    } else if (total >= 3) {
+                      angle = idx === 0 ? -14 : idx === 1 ? 0 : 14;
+                      translateY = idx === 1 ? 0 : 6;
+                    }
+
+                    return (
+                      <div
+                        key={card.id}
+                        draggable
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData("fromIndex", idx.toString());
+                          e.dataTransfer.setData("cardId", card.id);
+                          e.dataTransfer.setData("text/plain", card.id);
+                          e.dataTransfer.effectAllowed = "move";
+                          setIsDragging(true);
+                          setDraggedCardIndex(idx);
+                        }}
+                        onDragEnd={() => {
+                          setIsDragging(false);
+                          setDraggedCardIndex(null);
+                        }}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          e.dataTransfer.dropEffect = "move";
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          const fromIndexStr = e.dataTransfer.getData("fromIndex");
+                          if (fromIndexStr !== "" && fromIndexStr !== null) {
+                            const fromIdx = parseInt(fromIndexStr, 10);
+                            if (!isNaN(fromIdx) && fromIdx !== idx && moves.reorderHand) {
+                              moves.reorderHand({ fromIndex: fromIdx, toIndex: idx });
+                            }
+                          }
+                        }}
+                        onClick={() => canPlayCards && moves.playCard(card.id)}
+                        onMouseEnter={() => setHoveredCardId(card.id)}
+                        onMouseLeave={() => setHoveredCardId(null)}
+                        style={{
+                          cursor: canPlayCards ? "grab" : "pointer",
+                          margin: total > 1 ? "0 -10px" : "0 4px",
+                          transform: isHovered
+                            ? "translateY(-26px) scale(1.18) rotate(0deg)"
+                            : `translateY(${translateY}px) rotate(${angle}deg)`,
+                          zIndex: isHovered ? 50 : idx + 1,
+                          transition: "all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                          boxShadow: isHovered
+                            ? "0 16px 36px rgba(245, 158, 11, 0.5), 0 0 20px rgba(59, 130, 246, 0.5)"
+                            : "0 6px 14px rgba(0,0,0,0.4)",
+                          borderRadius: "10px",
+                        }}
+                      >
+                        <RenderCard card={card} isPlayable={canPlayCards} cardFaces={activeDeckTheme?.cardFaces} />
+                      </div>
+                    );
+                  })}
                   {myHand.length === 0 && (
-                    <div style={{ color: "#64748b", fontStyle: "italic" }}>No cards in hand</div>
+                    <div style={{ color: "#64748b", fontStyle: "italic", padding: "16px" }}>
+                      No cards in hand
+                    </div>
                   )}
                 </div>
               </div>
