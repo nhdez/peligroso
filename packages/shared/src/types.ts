@@ -48,6 +48,7 @@ export interface DeckTheme {
   name: string;
   description: string;
   cardBackUrl: string;
+  cardFaces?: Record<string, string>; // Map of card.id (e.g. "1-espada") -> image URL
 }
 
 export type StorageProviderType = "cloudflare-r2" | "aws-s3" | "supabase-storage" | "custom-s3";

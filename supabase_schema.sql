@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS public.deck_themes (
   name TEXT NOT NULL,
   description TEXT NOT NULL,
   card_back_url TEXT NOT NULL,
+  card_faces JSONB DEFAULT '{}'::jsonb,
   created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

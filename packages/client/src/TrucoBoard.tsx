@@ -537,7 +537,7 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
                     </div>
                     <div style={{ display: "flex", justifyContent: "center", gap: "8px", minHeight: "80px" }}>
                       {(G.tableCards["2"] || []).map((card, i) => (
-                        <RenderCard key={`p2-${card.id}-${i}`} card={card} />
+                        <RenderCard key={`p2-${card.id}-${i}`} card={card} cardFaces={activeDeckTheme?.cardFaces} />
                       ))}
                     </div>
                   </div>
@@ -550,7 +550,7 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
                       </div>
                       <div style={{ display: "flex", justifyContent: "center", gap: "6px", minHeight: "80px" }}>
                         {(G.tableCards["1"] || []).map((card, i) => (
-                          <RenderCard key={`p1-${card.id}-${i}`} card={card} />
+                          <RenderCard key={`p1-${card.id}-${i}`} card={card} cardFaces={activeDeckTheme?.cardFaces} />
                         ))}
                       </div>
                     </div>
@@ -561,7 +561,7 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
                       </div>
                       <div style={{ display: "flex", justifyContent: "center", gap: "6px", minHeight: "80px" }}>
                         {(G.tableCards["3"] || []).map((card, i) => (
-                          <RenderCard key={`p3-${card.id}-${i}`} card={card} />
+                          <RenderCard key={`p3-${card.id}-${i}`} card={card} cardFaces={activeDeckTheme?.cardFaces} />
                         ))}
                       </div>
                     </div>
@@ -574,7 +574,7 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
                     </div>
                     <div style={{ display: "flex", justifyContent: "center", gap: "8px", minHeight: "80px" }}>
                       {(G.tableCards["0"] || []).map((card, i) => (
-                        <RenderCard key={`p0-${card.id}-${i}`} card={card} />
+                        <RenderCard key={`p0-${card.id}-${i}`} card={card} cardFaces={activeDeckTheme?.cardFaces} />
                       ))}
                     </div>
                   </div>
@@ -595,7 +595,7 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
                   </div>
                   <div style={{ display: "flex", justifyContent: "center", gap: "12px", minHeight: "100px", marginBottom: "16px" }}>
                     {opponentCardsPlayed.map((card, i) => (
-                      <RenderCard key={`opp-played-${card.id}-${i}`} card={card} />
+                      <RenderCard key={`opp-played-${card.id}-${i}`} card={card} cardFaces={activeDeckTheme?.cardFaces} />
                     ))}
                   </div>
 
@@ -604,7 +604,7 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
                   </div>
                   <div style={{ display: "flex", justifyContent: "center", gap: "12px", minHeight: "100px" }}>
                     {myCardsPlayed.map((card, i) => (
-                      <RenderCard key={`my-played-${card.id}-${i}`} card={card} />
+                      <RenderCard key={`my-played-${card.id}-${i}`} card={card} cardFaces={activeDeckTheme?.cardFaces} />
                     ))}
                   </div>
                 </>
@@ -766,7 +766,7 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
                         e.currentTarget.style.transform = "translateY(0)";
                       }}
                     >
-                      <RenderCard card={card} isPlayable={canPlayCards} />
+                      <RenderCard card={card} isPlayable={canPlayCards} cardFaces={activeDeckTheme?.cardFaces} />
                     </div>
                   ))}
                   {myHand.length === 0 && (
@@ -789,7 +789,41 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
   );
 }
 
-function RenderCard({ card, isPlayable = false }: { card: Card; isPlayable?: boolean }) {
+function RenderCard({
+  card,
+  isPlayable = false,
+  cardFaces,
+}: {
+  card: Card;
+  isPlayable?: boolean;
+  cardFaces?: Record<string, string>;
+}) {
+  const customFaceUrl = cardFaces?.[card.id];
+
+  if (customFaceUrl) {
+    return (
+      <div
+        style={{
+          width: "70px",
+          height: "105px",
+          borderRadius: "10px",
+          border: isPlayable ? "2px solid #3b82f6" : "1px solid #cbd5e1",
+          boxShadow: isPlayable ? "0 4px 12px rgba(59, 130, 246, 0.4)" : "0 4px 8px rgba(0,0,0,0.3)",
+          overflow: "hidden",
+          boxSizing: "border-box",
+          userSelect: "none",
+          background: "#000",
+        }}
+      >
+        <img
+          src={customFaceUrl}
+          alt={`${card.rank} de ${card.suit}`}
+          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        />
+      </div>
+    );
+  }
+
   const icon = SUIT_ICONS[card.suit] || "🃏";
   const color = SUIT_COLORS[card.suit] || "#000";
 

@@ -16,6 +16,8 @@ export function AdminPanel({ isOpen, onClose }: { isOpen: boolean; onClose: () =
   const [deckName, setDeckName] = useState("");
   const [deckDesc, setDeckDesc] = useState("");
   const [cardBackUrl, setCardBackUrl] = useState("");
+  const [cardFaces, setCardFaces] = useState<Record<string, string>>({});
+  const [uploadProgress, setUploadProgress] = useState<string | null>(null);
   const [searchFilter, setSearchFilter] = useState("");
 
   // i18n search & form state
@@ -29,6 +31,64 @@ export function AdminPanel({ isOpen, onClose }: { isOpen: boolean; onClose: () =
   const [storageForm, setStorageForm] = useState(storageConfig);
   const [storageSaveMessage, setStorageSaveMessage] = useState<string | null>(null);
 
+  const SUITS = ["espada", "basto", "oro", "copa"] as const;
+  const RANKS = [1, 2, 3, 4, 5, 6, 7, 10, 11, 12] as const;
+
+  function parseCardIdFromFilename(filename: string): string | null {
+    const clean = filename.toLowerCase().replace(/[^a-z0-9]/g, " ");
+    for (const suit of ["espada", "basto", "oro", "copa"]) {
+      if (clean.includes(suit)) {
+        for (const rank of [12, 11, 10, 7, 6, 5, 4, 3, 2, 1]) {
+          if (clean.includes(String(rank))) {
+            return `${rank}-${suit}`;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  async function handleSingleCardFaceUpload(cardId: string, file: File) {
+    setUploadProgress(`Uploading ${cardId}...`);
+    try {
+      const url = await uploadAsset(file, "decks");
+      setCardFaces((prev) => ({ ...prev, [cardId]: url }));
+    } catch (err: any) {
+      alert(`Failed to upload ${cardId}: ${err.message}`);
+    } finally {
+      setUploadProgress(null);
+    }
+  }
+
+  async function handleBulkCardFacesUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploading(true);
+    const newFaces: Record<string, string> = { ...cardFaces };
+    let count = 0;
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const cardId = parseCardIdFromFilename(file.name);
+      if (cardId) {
+        setUploadProgress(`Uploading ${i + 1}/${files.length}: ${file.name}...`);
+        try {
+          const url = await uploadAsset(file, "decks");
+          newFaces[cardId] = url;
+          count++;
+        } catch (err) {
+          console.error(`Failed to upload ${file.name}:`, err);
+        }
+      }
+    }
+
+    setCardFaces(newFaces);
+    setIsUploading(false);
+    setUploadProgress(null);
+    alert(`Successfully uploaded ${count} card face images!`);
+  }
+
   if (!isOpen) return null;
 
   function handleCreateDeck(e: React.FormEvent) {
@@ -39,11 +99,13 @@ export function AdminPanel({ isOpen, onClose }: { isOpen: boolean; onClose: () =
       name: deckName,
       description: deckDesc || "Custom 40-Card Spanish Deck",
       cardBackUrl: cardBackUrl || "linear-gradient(135deg, #475569 0%, #0f172a 100%)",
+      cardFaces: Object.keys(cardFaces).length > 0 ? cardFaces : undefined,
     });
 
     setDeckName("");
     setDeckDesc("");
     setCardBackUrl("");
+    setCardFaces({});
   }
 
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -338,6 +400,104 @@ export function AdminPanel({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                 <div>
                   <label style={labelStyle}>Or Upload Card Back Image</label>
                   <input type="file" accept="image/*" onChange={handleFileUpload} style={{ color: "#94a3b8", fontSize: "0.85rem" }} />
+                </div>
+
+                {/* 40-Card Front Face Image Manager */}
+                <div style={{ background: "rgba(0, 0, 0, 0.3)", borderRadius: "12px", padding: "14px", border: "1px solid rgba(255,255,255,0.08)", marginTop: "4px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                    <label style={{ ...labelStyle, margin: 0, color: "#f59e0b", fontSize: "0.9rem" }}>
+                      🃏 Upload 40 Individual Card Face Images ({Object.keys(cardFaces).length}/40 Uploaded)
+                    </label>
+                  </div>
+
+                  {/* Bulk Upload Button */}
+                  <div style={{ background: "rgba(37, 99, 235, 0.15)", border: "1px dashed #3b82f6", borderRadius: "10px", padding: "10px", textAlign: "center", marginBottom: "12px" }}>
+                    <div style={{ fontSize: "0.8rem", color: "#93c5fd", fontWeight: "bold", marginBottom: "4px" }}>
+                      ⚡ Bulk Auto-Upload (Multiple Files)
+                    </div>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={handleBulkCardFacesUpload}
+                      style={{ color: "#94a3b8", fontSize: "0.75rem" }}
+                    />
+                    <div style={{ fontSize: "0.7rem", color: "#64748b", marginTop: "4px" }}>
+                      Tip: Auto-maps filenames like <code>1-espada.png</code>, <code>7_oro.jpg</code>, <code>10copa.png</code>
+                    </div>
+                  </div>
+
+                  {uploadProgress && (
+                    <div style={{ padding: "6px 10px", borderRadius: "6px", background: "#d97706", color: "#fff", fontSize: "0.75rem", fontWeight: "bold", textAlign: "center", marginBottom: "10px" }}>
+                      ⏳ {uploadProgress}
+                    </div>
+                  )}
+
+                  {/* 40-Card Suit Matrix Grid */}
+                  <div style={{ maxHeight: "240px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "12px", paddingRight: "4px" }}>
+                    {SUITS.map((suit) => {
+                      const suitIcon = suit === "espada" ? "⚔️" : suit === "basto" ? "🪵" : suit === "oro" ? "🪙" : "🍷";
+                      return (
+                        <div key={suit} style={{ background: "rgba(15, 23, 42, 0.5)", padding: "8px", borderRadius: "10px" }}>
+                          <div style={{ fontSize: "0.75rem", fontWeight: "bold", color: "#cbd5e1", textTransform: "capitalize", marginBottom: "6px" }}>
+                            {suitIcon} {suit}s
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "6px" }}>
+                            {RANKS.map((rank) => {
+                              const cardId = `${rank}-${suit}`;
+                              const customUrl = cardFaces[cardId];
+                              return (
+                                <div
+                                  key={cardId}
+                                  style={{
+                                    background: customUrl ? "rgba(34, 197, 94, 0.15)" : "rgba(255,255,255,0.04)",
+                                    border: customUrl ? "1px solid #22c55e" : "1px solid rgba(255,255,255,0.1)",
+                                    borderRadius: "8px",
+                                    padding: "4px",
+                                    textAlign: "center",
+                                    fontSize: "0.7rem",
+                                  }}
+                                >
+                                  <div style={{ fontWeight: "bold", color: customUrl ? "#4ade80" : "#94a3b8" }}>
+                                    {rank} {suitIcon}
+                                  </div>
+                                  {customUrl ? (
+                                    <div style={{ margin: "4px 0" }}>
+                                      <img src={customUrl} alt={cardId} style={{ width: "32px", height: "48px", objectFit: "cover", borderRadius: "4px" }} />
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const next = { ...cardFaces };
+                                          delete next[cardId];
+                                          setCardFaces(next);
+                                        }}
+                                        style={{ display: "block", width: "100%", background: "#ef4444", color: "#fff", border: "none", borderRadius: "4px", fontSize: "0.6rem", cursor: "pointer", marginTop: "2px" }}
+                                      >
+                                        Remove
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <label style={{ display: "block", marginTop: "4px", background: "#2563eb", color: "#fff", padding: "2px 4px", borderRadius: "4px", fontSize: "0.6rem", cursor: "pointer" }}>
+                                      Upload
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        style={{ display: "none" }}
+                                        onChange={(e) => {
+                                          const f = e.target.files?.[0];
+                                          if (f) handleSingleCardFaceUpload(cardId, f);
+                                        }}
+                                      />
+                                    </label>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 <button
