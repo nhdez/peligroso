@@ -781,6 +781,7 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
         {/* Right Sidebar: In-Game Chat & WebRTC Voice/Video Panel */}
         <SocialPanel
           myID={myID}
+          matchID={ctx.matchID || "demo-match"}
           logs={G.logs}
           onVideoStreamChange={(stream) => setMyVideoStream(stream)}
         />

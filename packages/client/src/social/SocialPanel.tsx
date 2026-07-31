@@ -2,24 +2,49 @@ import React, { useState, useEffect, useRef } from "react";
 import { GameLogMessage } from "shared";
 import { VoiceManager, ParticipantVoiceState } from "./VoiceManager.js";
 import { VideoManager } from "./VideoManager.js";
-import { useAuth } from "../AuthContext.js";
+import { useAuth, getCountryFlag } from "../AuthContext.js";
 import { useI18n } from "../i18n/I18nContext.js";
+import { supabase, isSupabaseConfigured } from "../supabaseClient.js";
 
 export interface ChatMessage {
   id: string;
   senderId: string;
   senderName: string;
+  countryCode: string;
   role: "player" | "spectator";
   text: string;
   timestamp: string;
 }
 
+const DEFAULT_GAME_MESSAGES: ChatMessage[] = [
+  {
+    id: "m-1",
+    senderId: "0",
+    senderName: "Player 0",
+    countryCode: "AR",
+    role: "player",
+    text: "¡Buenas! ¡Suerte y que gane el mejor! 🃏",
+    timestamp: "12:00",
+  },
+  {
+    id: "m-2",
+    senderId: "1",
+    senderName: "Player 1 (AI)",
+    countryCode: "UY",
+    role: "player",
+    text: "¡A ver qué sale! 🔥",
+    timestamp: "12:01",
+  },
+];
+
 export function SocialPanel({
   myID,
+  matchID = "demo-match",
   logs,
   onVideoStreamChange,
 }: {
   myID: string;
+  matchID?: string;
   logs: GameLogMessage[];
   onVideoStreamChange?: (stream: MediaStream | null) => void;
 }) {
@@ -53,27 +78,74 @@ export function SocialPanel({
   ]);
 
   // Chat Messages State
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-    {
-      id: "m-1",
-      senderId: "0",
-      senderName: "Player 0",
-      role: "player",
-      text: "¡Buenas! ¡Suerte y que gane el mejor! 🃏",
-      timestamp: "12:00",
-    },
-    {
-      id: "m-2",
-      senderId: "1",
-      senderName: "Player 1 (AI)",
-      role: "player",
-      text: "¡A ver qué sale! 🔥",
-      timestamp: "12:01",
-    },
-  ]);
-
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(DEFAULT_GAME_MESSAGES);
   const [inputText, setInputText] = useState("");
   const chatEndRef = useRef<HTMLDivElement | null>(null);
+
+  // Fetch in-game chat messages from Supabase Postgres & subscribe to Realtime
+  useEffect(() => {
+    if (isSupabaseConfigured && supabase && matchID) {
+      supabase
+        .from("game_chat_messages")
+        .select("*")
+        .eq("match_id", matchID)
+        .order("created_at", { ascending: true })
+        .limit(50)
+        .then(({ data, error }) => {
+          if (data && data.length > 0 && !error) {
+            const formatted: ChatMessage[] = data.map((row: any) => ({
+              id: row.id,
+              senderId: row.sender_id || "0",
+              senderName: row.username,
+              countryCode: row.country_code || "AR",
+              role: (row.role as "player" | "spectator") || "player",
+              text: row.content,
+              timestamp: new Date(row.created_at).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+            }));
+            setChatMessages(formatted);
+          }
+        });
+
+      const channel = supabase
+        .channel(`game_chat_${matchID}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "game_chat_messages",
+            filter: `match_id=eq.${matchID}`,
+          },
+          (payload) => {
+            const row = payload.new as any;
+            const newMsg: ChatMessage = {
+              id: row.id,
+              senderId: row.sender_id || "0",
+              senderName: row.username,
+              countryCode: row.country_code || "AR",
+              role: (row.role as "player" | "spectator") || "player",
+              text: row.content,
+              timestamp: new Date(row.created_at).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+            };
+            setChatMessages((prev) => {
+              if (prev.some((m) => m.id === newMsg.id)) return prev;
+              return [...prev, newMsg];
+            });
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [matchID]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -120,22 +192,41 @@ export function SocialPanel({
     );
   }
 
-  function handleSendMessage(e?: React.FormEvent, textOverride?: string) {
+  async function handleSendMessage(e?: React.FormEvent, textOverride?: string) {
     if (e) e.preventDefault();
     const msgText = textOverride || inputText;
     if (!msgText.trim()) return;
 
+    const senderName = profile?.username || `Player ${myID}`;
+    const countryCode = profile?.country_code || "AR";
+    const content = msgText.trim();
+
     const newMessage: ChatMessage = {
       id: `msg-${Date.now()}`,
       senderId: myID,
-      senderName: profile?.username || `Player ${myID}`,
+      senderName,
+      countryCode,
       role: "player",
-      text: msgText.trim(),
+      text: content,
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
 
     setChatMessages((prev) => [...prev, newMessage]);
     if (!textOverride) setInputText("");
+
+    // Persist in-game message to Supabase Postgres
+    if (isSupabaseConfigured && supabase) {
+      await supabase.from("game_chat_messages").insert([
+        {
+          match_id: matchID,
+          sender_id: myID,
+          username: senderName,
+          country_code: countryCode,
+          role: "player",
+          content: content,
+        },
+      ]);
+    }
   }
 
   const QUICK_EMOJIS = ["🃏", "🔥", "👏", "😜", "👑", "💥"];
@@ -326,8 +417,10 @@ export function SocialPanel({
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.7rem", color: "#94a3b8", marginBottom: "2px" }}>
-                  <span style={{ fontWeight: "bold", color: msg.role === "player" ? "#60a5fa" : "#f472b6" }}>
-                    {msg.senderName} <span style={{ fontSize: "0.65rem", opacity: 0.8 }}>[{msg.role.toUpperCase()}]</span>
+                  <span style={{ fontWeight: "bold", color: msg.role === "player" ? "#60a5fa" : "#f472b6", display: "flex", alignItems: "center", gap: "4px" }}>
+                    <span>{getCountryFlag(msg.countryCode)}</span>
+                    <span>{msg.senderName}</span>
+                    <span style={{ fontSize: "0.65rem", opacity: 0.8 }}>[{msg.role.toUpperCase()}]</span>
                   </span>
                   <span>{msg.timestamp}</span>
                 </div>

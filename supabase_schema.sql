@@ -118,3 +118,44 @@ CREATE POLICY "Public & Authenticated Upload Access for peligroso-storage"
 ON storage.objects FOR INSERT
 WITH CHECK (bucket_id = 'peligroso-storage');
 
+-- ============================================================================
+-- 9. LOBBY & IN-GAME CHAT MESSAGES PERSISTENCE
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS public.lobby_messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sender_id TEXT,
+  username TEXT NOT NULL,
+  country_code TEXT NOT NULL DEFAULT 'AR',
+  role TEXT NOT NULL DEFAULT 'user',
+  content TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.game_chat_messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  match_id TEXT NOT NULL,
+  sender_id TEXT,
+  username TEXT NOT NULL,
+  country_code TEXT NOT NULL DEFAULT 'AR',
+  role TEXT NOT NULL DEFAULT 'user',
+  content TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE public.lobby_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.game_chat_messages ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public Read Lobby Messages" ON public.lobby_messages;
+CREATE POLICY "Public Read Lobby Messages" ON public.lobby_messages FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public Insert Lobby Messages" ON public.lobby_messages;
+CREATE POLICY "Public Insert Lobby Messages" ON public.lobby_messages FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public Read Game Chat Messages" ON public.game_chat_messages;
+CREATE POLICY "Public Read Game Chat Messages" ON public.game_chat_messages FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public Insert Game Chat Messages" ON public.game_chat_messages;
+CREATE POLICY "Public Insert Game Chat Messages" ON public.game_chat_messages FOR INSERT WITH CHECK (true);
+
+

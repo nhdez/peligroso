@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAuth, getCountryFlag } from "./AuthContext.js";
+import { supabase, isSupabaseConfigured } from "./supabaseClient.js";
 
 export interface LobbyMessage {
   id: string;
@@ -10,58 +11,136 @@ export interface LobbyMessage {
   timestamp: string;
 }
 
+const DEFAULT_LOBBY_MESSAGES: LobbyMessage[] = [
+  {
+    id: "l-1",
+    senderName: "ElGaucho_AR",
+    countryCode: "AR",
+    role: "user",
+    text: "¡Buenas a todos! ¿Quién sale para un 2v2 en Peligroso? 🃏",
+    timestamp: "12:50",
+  },
+  {
+    id: "l-2",
+    senderName: "ElMate_UY",
+    countryCode: "UY",
+    role: "user",
+    text: "¡Me sumo de compañero! 🇺🇾",
+    timestamp: "12:51",
+  },
+  {
+    id: "l-3",
+    senderName: "TrucoMaster_ES",
+    countryCode: "ES",
+    role: "admin",
+    text: "¡Bienvenidos al Lobby Global de Peligroso! 🏆",
+    timestamp: "12:55",
+  },
+];
+
 export function LobbyChat() {
   const { profile } = useAuth();
-  const [messages, setMessages] = useState<LobbyMessage[]>([
-    {
-      id: "l-1",
-      senderName: "ElGaucho_AR",
-      countryCode: "AR",
-      role: "user",
-      text: "¡Buenas a todos! ¿Quién sale para un 2v2? 🃏",
-      timestamp: "12:50",
-    },
-    {
-      id: "l-2",
-      senderName: "ElMate_UY",
-      countryCode: "UY",
-      role: "user",
-      text: "¡Me sumo de compañero! 🇺🇾",
-      timestamp: "12:51",
-    },
-    {
-      id: "l-3",
-      senderName: "TrucoMaster_ES",
-      countryCode: "ES",
-      role: "admin",
-      text: "¡Bienvenidos al Lobby Global de Peligroso! 🏆",
-      timestamp: "12:55",
-    },
-  ]);
-
+  const [messages, setMessages] = useState<LobbyMessage[]>(DEFAULT_LOBBY_MESSAGES);
   const [inputText, setInputText] = useState("");
   const chatEndRef = useRef<HTMLDivElement | null>(null);
+
+  // Fetch messages from Supabase Postgres on mount & subscribe to Realtime updates
+  useEffect(() => {
+    if (isSupabaseConfigured && supabase) {
+      // 1. Initial Fetch
+      supabase
+        .from("lobby_messages")
+        .select("*")
+        .order("created_at", { ascending: true })
+        .limit(50)
+        .then(({ data, error }) => {
+          if (data && data.length > 0 && !error) {
+            const formatted: LobbyMessage[] = data.map((row: any) => ({
+              id: row.id,
+              senderName: row.username,
+              countryCode: row.country_code || "AR",
+              role: row.role || "user",
+              text: row.content,
+              timestamp: new Date(row.created_at).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+            }));
+            setMessages(formatted);
+          }
+        });
+
+      // 2. Realtime Channel Subscription
+      const channel = supabase
+        .channel("lobby_messages_channel")
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "lobby_messages" },
+          (payload) => {
+            const row = payload.new as any;
+            const newMsg: LobbyMessage = {
+              id: row.id,
+              senderName: row.username,
+              countryCode: row.country_code || "AR",
+              role: row.role || "user",
+              text: row.content,
+              timestamp: new Date(row.created_at).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+            };
+            setMessages((prev) => {
+              if (prev.some((m) => m.id === newMsg.id)) return prev;
+              return [...prev, newMsg];
+            });
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, []);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  function handleSendMessage(e?: React.FormEvent, textOverride?: string) {
+  async function handleSendMessage(e?: React.FormEvent, textOverride?: string) {
     if (e) e.preventDefault();
     const text = textOverride || inputText;
     if (!text.trim()) return;
 
-    const newMsg: LobbyMessage = {
+    const senderName = profile?.username || "Guest";
+    const countryCode = profile?.country_code || "AR";
+    const role = profile?.role || "user";
+    const content = text.trim();
+
+    const localMsg: LobbyMessage = {
       id: `lmsg-${Date.now()}`,
-      senderName: profile?.username || "Guest",
-      countryCode: profile?.country_code || "AR",
-      role: profile?.role || "user",
-      text: text.trim(),
+      senderName,
+      countryCode,
+      role,
+      text: content,
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
 
-    setMessages((prev) => [...prev, newMsg]);
+    setMessages((prev) => [...prev, localMsg]);
     if (!textOverride) setInputText("");
+
+    // Persist to Supabase Postgres database
+    if (isSupabaseConfigured && supabase) {
+      await supabase.from("lobby_messages").insert([
+        {
+          sender_id: profile?.id || null,
+          username: senderName,
+          country_code: countryCode,
+          role: role,
+          content: content,
+        },
+      ]);
+    }
   }
 
   const QUICK_EMOJIS = ["🃏", "🔥", "👏", "😜", "👑", "💥"];
