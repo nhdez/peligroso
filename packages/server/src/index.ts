@@ -7,7 +7,7 @@ const { Server, Origins } = require("boardgame.io/server");
 
 const server = Server({
   games: [TrucoGame],
-  origins: [Origins.LOCALHOST], // add your deployed client origin here later
+  origins: [Origins.LOCALHOST, "https://peligroso-client.vercel.app"],
 });
 
 const PORT = Number(process.env.PORT) || 8000;
