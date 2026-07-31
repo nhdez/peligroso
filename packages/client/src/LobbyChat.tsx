@@ -150,7 +150,7 @@ export function LobbyChat() {
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.75rem", color: "#94a3b8", marginBottom: "3px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <span>{getCountryFlag(m.countryCode)}</span>
+                {getCountryFlag(m.countryCode) ? <span>{getCountryFlag(m.countryCode)}</span> : null}
                 <span style={{ fontWeight: "bold", color: "#60a5fa" }}>{m.senderName}</span>
                 {m.role === "admin" && (
                   <span style={{ background: "#d97706", color: "#ffffff", fontSize: "0.6rem", padding: "1px 4px", borderRadius: "4px", fontWeight: "bold" }}>

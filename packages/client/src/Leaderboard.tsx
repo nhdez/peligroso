@@ -106,9 +106,11 @@ export function Leaderboard() {
                   <span style={{ fontSize: "1rem", fontWeight: "bold", width: "24px" }}>
                     {rankBadge}
                   </span>
-                  <span style={{ fontSize: "1.2rem" }} title={u.country_code || "AR"}>
-                    {getCountryFlag(u.country_code)}
-                  </span>
+                  {getCountryFlag(u.country_code, u.is_guest) ? (
+                    <span style={{ fontSize: "1.2rem" }} title={u.country_code || ""}>
+                      {getCountryFlag(u.country_code, u.is_guest)}
+                    </span>
+                  ) : null}
                   <div>
                     <div style={{ fontWeight: "bold", fontSize: "0.85rem", color: "#f8fafc" }}>
                       {u.username} {u.role === "admin" && <span style={{ color: "#f59e0b", fontSize: "0.7rem" }}>🛡️</span>}

@@ -474,7 +474,7 @@ export function SocialPanel({
               >
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.7rem", color: "#94a3b8", marginBottom: "2px" }}>
                   <span style={{ fontWeight: "bold", color: msg.role === "player" ? "#60a5fa" : "#f472b6", display: "flex", alignItems: "center", gap: "4px" }}>
-                    <span>{getCountryFlag(msg.countryCode)}</span>
+                    {msg.role !== "spectator" && getCountryFlag(msg.countryCode) ? <span>{getCountryFlag(msg.countryCode)}</span> : null}
                     <span>{msg.senderName}</span>
                     <span style={{ fontSize: "0.65rem", opacity: 0.8 }}>[{msg.role.toUpperCase()}]</span>
                   </span>

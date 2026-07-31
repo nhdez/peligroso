@@ -319,7 +319,7 @@ function MainApp() {
 
             <div>
               <div style={{ fontSize: "0.9rem", fontWeight: "bold", color: "#f59e0b" }}>
-                {getCountryFlag(profile?.country_code)} {profile?.username || "Guest"} {profile?.role === "admin" && "🛡️"}
+                {getCountryFlag(profile?.country_code, profile?.is_guest)} {profile?.username || "Guest"} {profile?.role === "admin" && "🛡️"}
               </div>
               <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
                 ELO: <strong style={{ color: "#60a5fa" }}>{profile?.elo_rating ?? 1200}</strong> | W/L: {profile?.matches_won ?? 0}/{profile?.matches_played ?? 0}
@@ -655,7 +655,7 @@ function MainApp() {
 
               <div>
                 <div style={{ fontSize: "1.1rem", fontWeight: "bold", color: "#60a5fa" }}>
-                  {getCountryFlag(profile?.country_code)} {profile?.username || "Guest"}
+                  {getCountryFlag(profile?.country_code, profile?.is_guest)} {profile?.username || "Guest"}
                 </div>
                 <div style={{ fontSize: "0.8rem", color: "#94a3b8", marginTop: "2px" }}>
                   ELO Rating: <strong style={{ color: "#f59e0b" }}>{profile?.elo_rating ?? 1200}</strong>

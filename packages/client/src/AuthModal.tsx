@@ -199,7 +199,7 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
           >
             <div>
               <div style={{ fontWeight: "bold", color: "#f59e0b", fontSize: "0.95rem" }}>
-                {getCountryFlag(profile.country_code)} {profile.username} {profile.role === "admin" && "🛡️"}
+                {getCountryFlag(profile.country_code, profile.is_guest)} {profile.username} {profile.role === "admin" && "🛡️"}
               </div>
               <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
                 Logged in via Supabase Auth

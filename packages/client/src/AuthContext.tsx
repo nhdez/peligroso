@@ -21,9 +21,10 @@ export const COUNTRY_LIST: CountryInfo[] = [
   { code: "GB", name: "United Kingdom", flag: "🇬🇧" },
 ];
 
-export function getCountryFlag(code?: string): string {
+export function getCountryFlag(code?: string, isGuest?: boolean): string {
+  if (isGuest || !code || code === "NONE" || code === "GUEST" || code.trim() === "") return "";
   const found = COUNTRY_LIST.find((c) => c.code === code);
-  return found ? found.flag : "🇦🇷";
+  return found ? found.flag : "";
 }
 
 export interface UserProfile {
@@ -229,7 +230,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       selected_deck_id: "classic-gold",
       custom_mat_url: PRESET_MATS[0].url,
       mat_opacity: 0.85,
-      country_code: "AR",
+      country_code: "",
     };
     localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(guestProf));
     setProfile(guestProf);

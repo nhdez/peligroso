@@ -222,7 +222,7 @@ export function MatchmakingQueue({ onMatchFound, onCancel, onSwitchToAI }: Match
             {formatTimer(elapsedSeconds)}
           </div>
           <div style={{ fontSize: "0.75rem", color: "#cbd5e1", marginTop: "4px" }}>
-            {getCountryFlag(profile?.country_code)} {profile?.username || "Player"} in Match Pool
+            {getCountryFlag(profile?.country_code, profile?.is_guest)} {profile?.username || "Player"} in Match Pool
           </div>
         </div>
 
