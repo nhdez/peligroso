@@ -3,9 +3,10 @@ import { useAuth, PRESET_MATS, COUNTRY_LIST, getCountryFlag } from "./AuthContex
 import { useStorage } from "./storage/StorageContext.js";
 
 export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const { signIn, signUp, signInAsGuest, signOut, isConfigured, profile, decks, updateCustomization, updateCountry } = useAuth();
+  const { signIn, signUp, signInAsGuest, signOut, isConfigured, profile, decks, updateCustomization, updateCountry, updateAvatar } = useAuth();
   const { uploadAsset } = useStorage();
   const [isUploadingMat, setIsUploadingMat] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [tab, setTab] = useState<"signin" | "signup" | "customization" | "guest">("customization");
 
   const [email, setEmail] = useState("");
@@ -19,6 +20,7 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
   const [matUrl, setMatUrl] = useState(profile?.custom_mat_url || PRESET_MATS[0].url);
   const [matOpacity, setMatOpacity] = useState(profile?.mat_opacity ?? 0.85);
   const [selectedCountry, setSelectedCountry] = useState(profile?.country_code || "AR");
+  const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || "");
 
   const isLoggedIn = Boolean(profile && !profile.is_guest);
 
@@ -28,6 +30,7 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
       setMatUrl(profile.custom_mat_url || PRESET_MATS[0].url);
       setMatOpacity(profile.mat_opacity ?? 0.85);
       setSelectedCountry(profile.country_code || "AR");
+      setAvatarUrl(profile.avatar_url || "");
     }
   }, [profile]);
 
@@ -55,6 +58,9 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
       } else if (tab === "customization") {
         await updateCustomization(selectedDeck, matUrl, matOpacity);
         await updateCountry(selectedCountry);
+        if (avatarUrl !== profile?.avatar_url) {
+          await updateAvatar(avatarUrl);
+        }
         onClose();
       } else {
         signInAsGuest(username || undefined);
@@ -78,6 +84,20 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
       alert(`Mat upload failed: ${err.message}`);
     } finally {
       setIsUploadingMat(false);
+    }
+  }
+
+  async function handleAvatarFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingAvatar(true);
+    try {
+      const url = await uploadAsset(file, "avatars");
+      setAvatarUrl(url);
+    } catch (err: any) {
+      alert(`Avatar upload failed: ${err.message}`);
+    } finally {
+      setIsUploadingAvatar(false);
     }
   }
 
@@ -238,6 +258,47 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
           {(tab === "customization" || isLoggedIn) && (
             <>
+              {/* Upload Profile Avatar Image */}
+              <div>
+                <label style={labelStyle}>👤 Profile Avatar Image</label>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", background: "rgba(15, 23, 42, 0.6)", padding: "10px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.1)" }}>
+                  <div
+                    style={{
+                      width: "48px",
+                      height: "48px",
+                      borderRadius: "50%",
+                      overflow: "hidden",
+                      background: "#1e293b",
+                      border: "2px solid #f59e0b",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "1.2rem",
+                      fontWeight: "bold",
+                      color: "#f59e0b",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    ) : (
+                      (profile?.username || "P").charAt(0).toUpperCase()
+                    )}
+                  </div>
+
+                  <div style={{ flex: 1 }}>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarFileUpload}
+                      disabled={isUploadingAvatar}
+                      style={{ color: "#94a3b8", fontSize: "0.8rem" }}
+                    />
+                    {isUploadingAvatar && <div style={{ fontSize: "0.7rem", color: "#f59e0b", marginTop: "2px" }}>⏳ Uploading avatar to Object Storage...</div>}
+                  </div>
+                </div>
+              </div>
+
               {/* Select Country */}
               <div>
                 <label style={labelStyle}>🌍 Select Country (Flag Badge)</label>

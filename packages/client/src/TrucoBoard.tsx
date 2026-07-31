@@ -712,7 +712,7 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
                 <VideoAvatar
                   stream={myVideoStream}
                   username={profile?.username || `Player ${myID}`}
-                  avatarUrl={profile?.custom_avatar_url}
+                  avatarUrl={profile?.avatar_url}
                   size={56}
                   isCurrentTurn={isMyTurn}
                 />

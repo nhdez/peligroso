@@ -115,12 +115,38 @@ function MainApp() {
           </select>
 
           {/* User Profile Badge */}
-          <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: "0.9rem", fontWeight: "bold", color: "#f59e0b" }}>
-              {getCountryFlag(profile?.country_code)} {profile?.username || "Guest"} {profile?.role === "admin" && "🛡️"}
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "right" }}>
+            <div
+              style={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "50%",
+                overflow: "hidden",
+                background: "#1e293b",
+                border: "2px solid #f59e0b",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "0.95rem",
+                fontWeight: "bold",
+                color: "#f59e0b",
+                flexShrink: 0,
+              }}
+            >
+              {profile?.avatar_url ? (
+                <img src={profile.avatar_url} alt={profile.username} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              ) : (
+                (profile?.username || "G").charAt(0).toUpperCase()
+              )}
             </div>
-            <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
-              ELO: <strong style={{ color: "#60a5fa" }}>{profile?.elo_rating ?? 1200}</strong> | W/L: {profile?.matches_won ?? 0}/{profile?.matches_played ?? 0}
+
+            <div>
+              <div style={{ fontSize: "0.9rem", fontWeight: "bold", color: "#f59e0b" }}>
+                {getCountryFlag(profile?.country_code)} {profile?.username || "Guest"} {profile?.role === "admin" && "🛡️"}
+              </div>
+              <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
+                ELO: <strong style={{ color: "#60a5fa" }}>{profile?.elo_rating ?? 1200}</strong> | W/L: {profile?.matches_won ?? 0}/{profile?.matches_played ?? 0}
+              </div>
             </div>
           </div>
 
@@ -384,15 +410,42 @@ function MainApp() {
               </div>
             </div>
 
-            <div style={{ background: "rgba(15, 23, 42, 0.6)", borderRadius: "12px", padding: "14px" }}>
-              <div style={{ fontSize: "1.1rem", fontWeight: "bold", color: "#60a5fa" }}>
-                {getCountryFlag(profile?.country_code)} {profile?.username || "Guest"}
+            <div style={{ background: "rgba(15, 23, 42, 0.6)", borderRadius: "14px", padding: "16px", display: "flex", alignItems: "center", gap: "14px" }}>
+              <div
+                style={{
+                  width: "52px",
+                  height: "52px",
+                  borderRadius: "50%",
+                  overflow: "hidden",
+                  background: "#1e293b",
+                  border: "2px solid #f59e0b",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "1.3rem",
+                  fontWeight: "bold",
+                  color: "#f59e0b",
+                  flexShrink: 0,
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
+                }}
+              >
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt={profile.username} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ) : (
+                  (profile?.username || "G").charAt(0).toUpperCase()
+                )}
               </div>
-              <div style={{ fontSize: "0.8rem", color: "#94a3b8", marginTop: "4px" }}>
-                ELO Rating: <strong style={{ color: "#f59e0b" }}>{profile?.elo_rating ?? 1200}</strong>
-              </div>
-              <div style={{ fontSize: "0.8rem", color: "#94a3b8" }}>
-                Matches Won: {profile?.matches_won ?? 0} / {profile?.matches_played ?? 0}
+
+              <div>
+                <div style={{ fontSize: "1.1rem", fontWeight: "bold", color: "#60a5fa" }}>
+                  {getCountryFlag(profile?.country_code)} {profile?.username || "Guest"}
+                </div>
+                <div style={{ fontSize: "0.8rem", color: "#94a3b8", marginTop: "2px" }}>
+                  ELO Rating: <strong style={{ color: "#f59e0b" }}>{profile?.elo_rating ?? 1200}</strong>
+                </div>
+                <div style={{ fontSize: "0.8rem", color: "#94a3b8" }}>
+                  Matches Won: {profile?.matches_won ?? 0} / {profile?.matches_played ?? 0}
+                </div>
               </div>
             </div>
 

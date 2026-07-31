@@ -40,6 +40,7 @@ export interface UserProfile {
   custom_mat_url: string;
   mat_opacity: number;
   country_code: string;
+  avatar_url?: string;
 }
 
 export const PRESET_DECKS: DeckTheme[] = [
@@ -85,6 +86,7 @@ interface AuthContextType {
   updateStats: (won: boolean) => void;
   updateCustomization: (deckId: string, matUrl: string, opacity: number) => Promise<void>;
   updateCountry: (countryCode: string) => Promise<void>;
+  updateAvatar: (avatarUrl: string) => Promise<void>;
   createDeckTheme: (theme: Omit<DeckTheme, "id">) => void;
   deleteDeckTheme: (id: string) => void;
   toggleUserBan: (userId: string) => void;
@@ -399,6 +401,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  async function updateAvatar(avatarUrl: string) {
+    if (!profile) return;
+    const updated: UserProfile = {
+      ...profile,
+      avatar_url: avatarUrl,
+    };
+    setProfile(updated);
+    setAllUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+
+    if (profile.is_guest) {
+      localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(updated));
+    } else if (supabase && profile.id) {
+      const { error } = await supabase.from("profiles").update({
+        avatar_url: avatarUrl,
+      }).eq("id", profile.id);
+
+      if (error) console.error("Error committing avatar to Supabase:", error);
+    }
+  }
+
   function createDeckTheme(theme: Omit<DeckTheme, "id">) {
     const newTheme: DeckTheme = {
       ...theme,
@@ -450,6 +472,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         updateStats,
         updateCustomization,
         updateCountry,
+        updateAvatar,
         createDeckTheme,
         deleteDeckTheme,
         toggleUserBan,
