@@ -1,4 +1,4 @@
-// Spanish 40-card deck (8s, 9s, 10s removed), used for Truco Argentino.
+// Spanish 40-card deck (8s, 9s, 10s removed), used for Peligroso (Truco Patagónico).
 export type Suit = "espada" | "basto" | "oro" | "copa";
 export const SUITS: Suit[] = ["espada", "basto", "oro", "copa"];
 

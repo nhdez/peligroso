@@ -1,4 +1,4 @@
-# Truco Argentino (sin Flor) — v2 scaffold
+# Peligroso (Truco Patagónico)
 
 Full multiplayer, TypeScript, built on **boardgame.io** for state
 sync/networking + **React** for the client.

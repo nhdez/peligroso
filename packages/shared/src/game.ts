@@ -202,7 +202,7 @@ function checkEarlyHandWinner(G: TrucoGameState): { winnerID: PlayerID; reason: 
 }
 
 export const TrucoGame: Game<TrucoGameState> = {
-  name: "truco-argentino",
+  name: "peligroso",
 
   setup: ({ ctx }) => {
     const numPlayers = (ctx.numPlayers as 2 | 4) ?? 2;

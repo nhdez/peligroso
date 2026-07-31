@@ -1,5 +1,5 @@
 -- ============================================================================
--- TRUCO ARGENTINO - SUPABASE DATABASE SCHEMA & RLS MIGRATION
+-- PELIGROSO (TRUCO PATAGÓNICO) - SUPABASE DATABASE SCHEMA & RLS MIGRATION
 -- ============================================================================
 
 -- 1. Create Profiles Table (Linked to Supabase Auth)

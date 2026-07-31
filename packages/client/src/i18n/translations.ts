@@ -7,7 +7,7 @@ export interface TranslationDictionary {
 export const DEFAULT_TRANSLATIONS: Record<string, TranslationDictionary> = {
   es: {
     // Header & Navigation
-    "app.title": "🃏 Truco Argentino",
+    "app.title": "🔥 Peligroso",
     "app.subtitle": "Seleccioná un modo de juego para empezar",
     "app.leave": "← Salir de la partida",
     "app.account": "Cuenta y Personalización",
@@ -78,7 +78,7 @@ export const DEFAULT_TRANSLATIONS: Record<string, TranslationDictionary> = {
   },
   en: {
     // Header & Navigation
-    "app.title": "🃏 Truco Argentino",
+    "app.title": "🔥 Peligroso",
     "app.subtitle": "Select a game mode to start playing",
     "app.leave": "← Leave Match",
     "app.account": "Account & Customization",

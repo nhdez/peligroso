@@ -34,7 +34,7 @@ export function LobbyChat() {
       senderName: "TrucoMaster_ES",
       countryCode: "ES",
       role: "admin",
-      text: "¡Bienvenidos al Lobby Global de Truco Argentino! 🏆",
+      text: "¡Bienvenidos al Lobby Global de Peligroso! 🏆",
       timestamp: "12:55",
     },
   ]);
