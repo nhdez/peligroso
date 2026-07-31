@@ -542,6 +542,13 @@ export const TrucoGame: Game<TrucoGameState> = {
     callTruco: ({ G, events, playerID }, type: TrucoCallType) => {
       if (G.currentTrucoCall?.accepted === null) return; // Pending call already exists
 
+      // Validate team ownership: team that initiated current Truco level cannot raise their own call
+      if (G.currentTrucoCall) {
+        const callerTeam = teamOf(G.currentTrucoCall.callerID, G.numPlayers);
+        const myTeam = teamOf(playerID!, G.numPlayers);
+        if (callerTeam === myTeam) return;
+      }
+
       // Validate sequence: truco -> retruco -> vale4
       if (!G.currentTrucoCall && type !== "truco") return;
       if (G.currentTrucoCall?.type === "truco" && type !== "retruco") return;

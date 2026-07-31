@@ -8,6 +8,7 @@ import {
   EnvidoCallType,
   TrucoCallType,
   HandPhase,
+  teamOf,
 } from "shared";
 import { useAuth, PRESET_MATS } from "./AuthContext.js";
 import { PointStakeMeter } from "./PointStakeMeter.js";
@@ -67,10 +68,19 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
   const envidoHistory = G.currentEnvidoCall?.history ?? [];
   const validEnvidoRaises = getValidEnvidoRaises(envidoHistory);
 
-  // Truco state helper
-  const trucoState = G.currentTrucoCall?.type;
-  const nextTrucoCall: TrucoCallType | null =
-    !trucoState ? "truco" : trucoState === "truco" ? "retruco" : trucoState === "retruco" ? "vale4" : null;
+  // Truco state helper & team ownership check
+  const currentTrucoCall = G.currentTrucoCall;
+  const myTeam = teamOf(myID, G.numPlayers);
+  const trucoCallerTeam = currentTrucoCall ? teamOf(currentTrucoCall.callerID, G.numPlayers) : null;
+  const isMyTeamTrucoCaller = trucoCallerTeam === myTeam;
+
+  let nextTrucoCall: TrucoCallType | null = null;
+  if (!currentTrucoCall) {
+    nextTrucoCall = "truco";
+  } else if (currentTrucoCall.accepted === true && !isMyTeamTrucoCaller) {
+    if (currentTrucoCall.type === "truco") nextTrucoCall = "retruco";
+    else if (currentTrucoCall.type === "retruco") nextTrucoCall = "vale4";
+  }
 
   const myEnvidoScore = calculateEnvido([...myHand, ...myCardsPlayed]);
 
@@ -740,8 +750,8 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
               {/* Call Response Banner (if pending for user) */}
               {isEnvidoResponder && (
                 <div style={{ marginBottom: "12px", textAlign: "center" }}>
-                  <div style={{ fontSize: "0.9rem", color: "#fef08a", marginBottom: "8px" }}>
-                    Envido called in PRIMERA! Choose your response:
+                  <div style={{ fontSize: "0.9rem", color: "#fef08a", marginBottom: "8px", fontWeight: "bold" }}>
+                    📢 Envido called in PRIMERA! Choose your response:
                   </div>
                   <div style={{ display: "flex", gap: "8px", justifyContent: "center", flexWrap: "wrap" }}>
                     <button style={btnStyle("#22c55e")} onClick={() => moves.respondEnvido({ accept: true })}>
@@ -760,16 +770,20 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
                         {raise === "envido" ? t("call.plus_envido") : raise === "real-envido" ? t("call.plus_real_envido") : t("call.plus_falta_envido")}
                       </button>
                     ))}
+
+                    <button style={btnStyle("#475569")} onClick={() => moves.irseAlMazo()}>
+                      {t("call.mazo")}
+                    </button>
                   </div>
                 </div>
               )}
 
               {isTrucoResponder && (
                 <div style={{ marginBottom: "12px", textAlign: "center" }}>
-                  <div style={{ fontSize: "0.9rem", color: "#fef08a", marginBottom: "8px" }}>
-                    {G.currentTrucoCall?.type.toUpperCase()} called! Respond:
+                  <div style={{ fontSize: "0.9rem", color: "#fef08a", marginBottom: "8px", fontWeight: "bold" }}>
+                    🔥 {G.currentTrucoCall?.type.toUpperCase()} called! Choose your response:
                   </div>
-                  <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+                  <div style={{ display: "flex", gap: "8px", justifyContent: "center", flexWrap: "wrap" }}>
                     <button style={btnStyle("#22c55e")} onClick={() => moves.respondTruco(true)}>
                       {t("call.quiero")}
                     </button>
@@ -787,32 +801,41 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
                         {t("call.vale4")}
                       </button>
                     )}
+
+                    {/* In Truco Patagónico, if Truco is called in PRIMERA before Envido is played, allow calling Envido first */}
+                    {G.phase === "PRIMERA" && !G.envidoResolved && (
+                      <button style={btnStyle("#2563eb")} onClick={() => moves.callEnvido("envido")}>
+                        {t("call.envido")} (First)
+                      </button>
+                    )}
+
+                    <button style={btnStyle("#475569")} onClick={() => moves.irseAlMazo()}>
+                      {t("call.mazo")}
+                    </button>
                   </div>
                 </div>
               )}
 
-              {/* Standard Calls (when on turn) */}
-              {!envidoPending && !trucoPending && (
+              {/* Standard Turn Actions (ONLY rendered when it IS my turn and no calls are pending) */}
+              {isMyTurn && !envidoPending && !trucoPending && (
                 <div style={{ display: "flex", gap: "8px", justifyContent: "center", marginBottom: "16px", flexWrap: "wrap" }}>
+                  {/* Envido calls are ONLY available in PRIMERA before Envido is resolved */}
                   {G.phase === "PRIMERA" && !G.envidoResolved && (
                     <>
                       <button
-                        disabled={!isMyTurn}
-                        style={btnStyle("#2563eb", !isMyTurn)}
+                        style={btnStyle("#2563eb")}
                         onClick={() => moves.callEnvido("envido")}
                       >
                         {t("call.envido")}
                       </button>
                       <button
-                        disabled={!isMyTurn}
-                        style={btnStyle("#d97706", !isMyTurn)}
+                        style={btnStyle("#d97706")}
                         onClick={() => moves.callEnvido("real-envido")}
                       >
                         {t("call.real_envido")}
                       </button>
                       <button
-                        disabled={!isMyTurn}
-                        style={btnStyle("#7c3aed", !isMyTurn)}
+                        style={btnStyle("#7c3aed")}
                         onClick={() => moves.callEnvido("falta-envido")}
                       >
                         {t("call.falta_envido")}
@@ -820,10 +843,10 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
                     </>
                   )}
 
+                  {/* Truco call is shown if valid for next level for current team */}
                   {nextTrucoCall && (
                     <button
-                      disabled={!isMyTurn}
-                      style={btnStyle("#dc2626", !isMyTurn)}
+                      style={btnStyle("#dc2626")}
                       onClick={() => moves.callTruco(nextTrucoCall)}
                     >
                       {nextTrucoCall === "truco"
@@ -837,6 +860,13 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
                   <button style={btnStyle("#475569")} onClick={() => moves.irseAlMazo()}>
                     {t("call.mazo")}
                   </button>
+                </div>
+              )}
+
+              {/* Waiting Status Badge (when it's NOT my turn and no response is pending) */}
+              {!isMyTurn && !isEnvidoResponder && !isTrucoResponder && (
+                <div style={{ textAlign: "center", padding: "8px", color: "#94a3b8", fontSize: "0.85rem", fontStyle: "italic", marginBottom: "8px" }}>
+                  ⏳ Waiting for Player {ctx.currentPlayer}'s turn...
                 </div>
               )}
 
