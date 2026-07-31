@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Client } from "boardgame.io/react";
 import { TrucoGame } from "shared";
 import { TrucoBoard } from "./TrucoBoard.js";
