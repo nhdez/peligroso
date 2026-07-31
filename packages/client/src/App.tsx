@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate, Link } from "react-router-dom";
 import { Client } from "boardgame.io/react";
+import { SocketIO } from "boardgame.io/multiplayer";
 import { TrucoGame } from "shared";
 import { TrucoBoard } from "./TrucoBoard.js";
 import { AuthModal } from "./AuthModal.js";
@@ -17,11 +18,22 @@ import { I18nSection } from "./admin/I18nSection.js";
 import { StorageSection } from "./admin/StorageSection.js";
 import { PaymentsSection } from "./admin/PaymentsSection.js";
 
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:8000";
+
 // boardgame.io Client wrappers
 const PeligrosoClient1v1AI = Client({
   game: TrucoGame,
   numPlayers: 2,
   board: TrucoBoard,
+  debug: false,
+});
+
+// Ranked 1v1 vs a real matched opponent - networked via the game server, not local-only.
+const PeligrosoClientRanked1v1 = Client({
+  game: TrucoGame,
+  numPlayers: 2,
+  board: TrucoBoard,
+  multiplayer: SocketIO({ server: SERVER_URL }),
   debug: false,
 });
 
@@ -87,8 +99,12 @@ function MainApp() {
   if (mode !== "lobby") {
     return (
       <div style={{ width: "100vw", height: "100vh", overflow: "hidden", background: "#020617" }}>
-        {mode === "ranked-1v1" || mode === "ai-1v1" ? (
-          <PeligrosoClient1v1AI playerID={playerID} matchID={activeMatchID} onLeaveMatch={() => { handleClearSession(); setMode("lobby"); }} />
+        {mode === "ranked-1v1" ? (
+          <PeligrosoClientRanked1v1 playerID={playerID} matchID={activeMatchID} onLeaveMatch={() => { handleClearSession(); setMode("lobby"); }} />
+        ) : mode === "ai-1v1" ? (
+          <PeligrosoClient1v1AI playerID={playerID} matchID={activeMatchID} aiSeats={["1"]} onLeaveMatch={() => { handleClearSession(); setMode("lobby"); }} />
+        ) : mode === "ai-2v2" ? (
+          <PeligrosoClient2v2AI playerID={playerID} matchID={activeMatchID} aiSeats={["1", "2", "3"]} onLeaveMatch={() => { handleClearSession(); setMode("lobby"); }} />
         ) : (
           <PeligrosoClient2v2AI playerID={playerID} matchID={activeMatchID} onLeaveMatch={() => { handleClearSession(); setMode("lobby"); }} />
         )}
