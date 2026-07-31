@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate, Link } from "react-router-dom";
 import { Client } from "boardgame.io/react";
-import { SocketIO } from "boardgame.io/multiplayer";
-import { TrucoGame } from "shared";
+import { Client as BoardClient } from "boardgame.io/client";
+import { SocketIO, Local } from "boardgame.io/multiplayer";
+import { TrucoGame, getBotMove } from "shared";
 import { TrucoBoard } from "./TrucoBoard.js";
 import { AuthModal } from "./AuthModal.js";
 import { LobbyChat } from "./LobbyChat.js";
@@ -21,10 +22,15 @@ import { PaymentsSection } from "./admin/PaymentsSection.js";
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:8000";
 
 // boardgame.io Client wrappers
+// Local() transport lets a human-controlled client and headless bot
+// client(s) share the same in-tab game state, each properly authorized
+// only for their own playerID's moves - required for AI seats to work,
+// and also what powers pass-and-play seat switching.
 const PeligrosoClient1v1AI = Client({
   game: TrucoGame,
   numPlayers: 2,
   board: TrucoBoard,
+  multiplayer: Local(),
   debug: false,
 });
 
@@ -41,8 +47,113 @@ const PeligrosoClient2v2AI = Client({
   game: TrucoGame,
   numPlayers: 4,
   board: TrucoBoard,
+  multiplayer: Local(),
   debug: false,
 });
+
+/**
+ * Drives one or more AI-controlled seats via headless (non-React)
+ * boardgame.io clients sharing the same Local() bus as the human's
+ * client. A dispatched move is always attributed to the dispatching
+ * client's own playerID, so each bot seat needs its own client - a
+ * single client cannot legally act as more than one player.
+ */
+function useAIBots(matchID: string, aiSeats: string[], numPlayers: number, active: boolean) {
+  const { updateStats } = useAuth();
+  const aiSeatsKey = aiSeats.join(",");
+
+  useEffect(() => {
+    if (!active || !aiSeatsKey) return;
+    const seats = aiSeatsKey.split(",");
+
+    const botClientMap = new Map(
+      seats.map((pid) => [
+        pid,
+        BoardClient({
+          game: TrucoGame,
+          multiplayer: Local(),
+          matchID,
+          playerID: pid,
+          numPlayers,
+          debug: false,
+        }),
+      ])
+    );
+    botClientMap.forEach((c) => c.start());
+
+    let isProcessing = false;
+    let statsRecorded = false;
+    const [firstClient] = botClientMap.values();
+
+    const unsubscribe = firstClient.subscribe((state) => {
+      if (!state) return;
+
+      if (state.ctx.gameover && !statsRecorded) {
+        statsRecorded = true;
+        updateStats(state.ctx.gameover.winner === "0");
+        return;
+      }
+
+      if (state.ctx.gameover || isProcessing) return;
+
+      const currentPID = state.ctx.currentPlayer;
+      const envidoResponder =
+        state.G.currentEnvidoCall?.accepted === null ? state.G.currentEnvidoCall?.pendingResponderID : undefined;
+      const trucoResponder =
+        state.G.currentTrucoCall?.accepted === null ? state.G.currentTrucoCall?.pendingResponderID : undefined;
+
+      const actingBotID =
+        (envidoResponder && botClientMap.has(envidoResponder) && envidoResponder) ||
+        (trucoResponder && botClientMap.has(trucoResponder) && trucoResponder) ||
+        (botClientMap.has(currentPID) && currentPID) ||
+        null;
+
+      if (!actingBotID) return;
+
+      const botMove = getBotMove(state.G, actingBotID);
+      if (!botMove) return;
+
+      const targetClient = botClientMap.get(actingBotID);
+      if (!targetClient) return;
+
+      isProcessing = true;
+      setTimeout(() => {
+        isProcessing = false;
+        const currentState = targetClient.getState();
+        if (!currentState || currentState.ctx.gameover) return;
+
+        switch (botMove.type) {
+          case "playCard":
+            targetClient.moves.playCard(botMove.cardId);
+            break;
+          case "callEnvido":
+            targetClient.moves.callEnvido(botMove.callType);
+            break;
+          case "respondEnvido":
+            targetClient.moves.respondEnvido({
+              accept: botMove.accept,
+              raiseType: botMove.raiseType,
+            });
+            break;
+          case "callTruco":
+            targetClient.moves.callTruco(botMove.callType);
+            break;
+          case "respondTruco":
+            targetClient.moves.respondTruco(botMove.accept);
+            break;
+          case "irseAlMazo":
+            targetClient.moves.irseAlMazo();
+            break;
+        }
+      }, 1000);
+    });
+
+    return () => {
+      unsubscribe();
+      botClientMap.forEach((c) => c.stop());
+    };
+  }, [matchID, active, numPlayers, aiSeatsKey, updateStats]);
+}
 
 function MainApp() {
   const { profile } = useAuth();
@@ -54,6 +165,9 @@ function MainApp() {
   const [mode, setMode] = useState<"lobby" | "ranked-1v1" | "ai-1v1" | "ai-2v2" | "local">("lobby");
   const [playerID, setPlayerID] = useState<string>("0");
   const [activeMatchID, setActiveMatchID] = useState<string>("demo-match");
+
+  useAIBots(activeMatchID, ["1"], 2, mode === "ai-1v1");
+  useAIBots(activeMatchID, ["1", "2", "3"], 4, mode === "ai-2v2");
 
   const [activeSession, setActiveSession] = useState<{ matchID: string; playerID: string; mode: any } | null>(() => {
     try {
@@ -102,9 +216,9 @@ function MainApp() {
         {mode === "ranked-1v1" ? (
           <PeligrosoClientRanked1v1 playerID={playerID} matchID={activeMatchID} onLeaveMatch={() => { handleClearSession(); setMode("lobby"); }} />
         ) : mode === "ai-1v1" ? (
-          <PeligrosoClient1v1AI playerID={playerID} matchID={activeMatchID} aiSeats={["1"]} onLeaveMatch={() => { handleClearSession(); setMode("lobby"); }} />
+          <PeligrosoClient1v1AI playerID={playerID} matchID={activeMatchID} onLeaveMatch={() => { handleClearSession(); setMode("lobby"); }} />
         ) : mode === "ai-2v2" ? (
-          <PeligrosoClient2v2AI playerID={playerID} matchID={activeMatchID} aiSeats={["1", "2", "3"]} onLeaveMatch={() => { handleClearSession(); setMode("lobby"); }} />
+          <PeligrosoClient2v2AI playerID={playerID} matchID={activeMatchID} onLeaveMatch={() => { handleClearSession(); setMode("lobby"); }} />
         ) : (
           <PeligrosoClient2v2AI playerID={playerID} matchID={activeMatchID} onLeaveMatch={() => { handleClearSession(); setMode("lobby"); }} />
         )}

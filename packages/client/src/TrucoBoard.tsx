@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import type { BoardProps } from "boardgame.io/react";
 import {
   TrucoGameState,
@@ -9,7 +9,6 @@ import {
   TrucoCallType,
   HandPhase,
   teamOf,
-  getBotMove,
 } from "shared";
 import { useAuth, PRESET_MATS } from "./AuthContext.js";
 import { PointStakeMeter } from "./PointStakeMeter.js";
@@ -35,7 +34,7 @@ const SUIT_COLORS: Record<string, string> = {
   copa: "#831843",
 };
 
-export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch, aiSeats }: BoardProps<TrucoGameState> & { onLeaveMatch?: () => void; aiSeats?: string[] }) {
+export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps<TrucoGameState> & { onLeaveMatch?: () => void }) {
   const { profile, decks } = useAuth();
   const { t } = useI18n();
   const [isDragging, setIsDragging] = useState(false);
@@ -137,57 +136,6 @@ export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch, aiSeats }: B
       setHandDelayCountdown(null);
     }
   }, [G.handOver, G.handNumber, G.winner]);
-
-  const aiProcessingRef = useRef(false);
-
-  useEffect(() => {
-    if (!aiSeats || aiSeats.length === 0) return;
-    if (aiProcessingRef.current) return;
-    if (ctx.gameover !== undefined) return;
-
-    const actingBotID = aiSeats.find((botID) => {
-      const isPendingEnvidoResponder =
-        G.currentEnvidoCall?.pendingResponderID === botID && G.currentEnvidoCall?.accepted === null;
-      const isPendingTrucoResponder =
-        G.currentTrucoCall?.pendingResponderID === botID && G.currentTrucoCall?.accepted === null;
-      return ctx.currentPlayer === botID || isPendingEnvidoResponder || isPendingTrucoResponder;
-    });
-
-    if (!actingBotID) return;
-
-    const botMove = getBotMove(G, actingBotID);
-    if (!botMove) return;
-
-    aiProcessingRef.current = true;
-    const timeout = setTimeout(() => {
-      aiProcessingRef.current = false;
-      switch (botMove.type) {
-        case "playCard":
-          moves.playCard(botMove.cardId);
-          break;
-        case "callEnvido":
-          moves.callEnvido(botMove.callType);
-          break;
-        case "respondEnvido":
-          moves.respondEnvido({ accept: botMove.accept, raiseType: botMove.raiseType });
-          break;
-        case "callTruco":
-          moves.callTruco(botMove.callType);
-          break;
-        case "respondTruco":
-          moves.respondTruco(botMove.accept);
-          break;
-        case "irseAlMazo":
-          moves.irseAlMazo();
-          break;
-      }
-    }, 1000);
-
-    return () => {
-      clearTimeout(timeout);
-      aiProcessingRef.current = false;
-    };
-  }, [G, ctx, moves, aiSeats]);
 
   const player0MatUrl = profile?.custom_mat_url || PRESET_MATS[0].url;
   const player0MatOpacity = profile?.mat_opacity ?? 0.85;
