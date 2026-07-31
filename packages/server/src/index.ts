@@ -7,23 +7,26 @@ const { Server, Origins } = require("boardgame.io/server");
 const Router = require("@koa/router");
 const bodyParser = require("koa-bodyparser");
 
+// Configure boardgame.io server with dynamic origin allow function
 const server = Server({
   games: [TrucoGame],
   origins: [
     Origins.LOCALHOST,
-    "https://peligroso-client.vercel.app",
-    "https://www.peligroso.net",
-    "https://peligroso.net",
-    "https://server.peligroso.net",
-    "*",
+    /^https?:\/\/(www\.)?peligroso\.net$/,
+    /^https?:\/\/server\.peligroso\.net$/,
+    /^https?:\/\/peligroso-client\.vercel\.app$/,
+    (origin: string) => true, // Fallback function allowing all origins
   ],
 });
 
-// CRITICAL CORS Middleware to handle cross-origin headers and OPTIONS preflights
+// Top-level Koa CORS Middleware handling all preflight OPTIONS & CORS headers
 server.app.use(async (ctx: any, next: any) => {
-  ctx.set("Access-Control-Allow-Origin", "*");
-  ctx.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE");
-  ctx.set("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept, X-Requested-With");
+  const origin = ctx.request.header.origin || "*";
+  ctx.set("Access-Control-Allow-Origin", origin);
+  ctx.set("Access-Control-Allow-Credentials", "true");
+  ctx.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE, PATCH");
+  ctx.set("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept, X-Requested-With, Origin");
+
   if (ctx.method === "OPTIONS") {
     ctx.status = 204;
     return;

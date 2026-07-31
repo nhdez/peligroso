@@ -10,7 +10,9 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
+    "@koa/router": "^10.1.1",
     "boardgame.io": "^0.50.2",
+    "koa-bodyparser": "^4.4.1",
     "shared": "*"
   },
   "devDependencies": {
