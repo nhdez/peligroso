@@ -27,7 +27,16 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        return { ...DEFAULT_TRANSLATIONS, ...parsed };
+        const merged: Record<string, TranslationDictionary> = { ...DEFAULT_TRANSLATIONS };
+
+        Object.keys(parsed).forEach((lang) => {
+          merged[lang] = { ...(DEFAULT_TRANSLATIONS[lang] || {}), ...parsed[lang] };
+          // Purge legacy "Truco Argentino" from cached browser localStorage
+          if (merged[lang]?.["app.title"]?.includes("Truco Argentino")) {
+            merged[lang]["app.title"] = DEFAULT_TRANSLATIONS[lang]?.["app.title"] || "🔥 Peligroso";
+          }
+        });
+        return merged;
       } catch {}
     }
     return DEFAULT_TRANSLATIONS;
@@ -48,6 +57,11 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   function t(key: string, params?: Record<string, string | number>): string {
     const langDict = translations[language] || translations["es"] || translations["en"] || {};
     let text = langDict[key] || translations["es"]?.[key] || translations["en"]?.[key] || key;
+
+    // Safety check for legacy title
+    if (key === "app.title" && text.includes("Truco Argentino")) {
+      text = "🔥 Peligroso";
+    }
 
     if (params) {
       Object.entries(params).forEach(([paramKey, val]) => {
