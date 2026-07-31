@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAuth, CallType, AudioShout } from "../AuthContext.js";
 import { useStorage } from "../storage/StorageContext.js";
 
@@ -28,6 +28,83 @@ export function ShoutsSection() {
   const [packName, setPackName] = useState("Custom Voice Pack");
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+
+  // Live Recording state
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+
+  useEffect(() => {
+    let timer: any = null;
+    if (isRecording) {
+      timer = setInterval(() => {
+        setRecordingSeconds((prev) => prev + 1);
+      }, 1000);
+    } else {
+      setRecordingSeconds(0);
+    }
+    return () => clearInterval(timer);
+  }, [isRecording]);
+
+  async function startRecording() {
+    try {
+      audioChunksRef.current = [];
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          audioChunksRef.current.push(e.data);
+        }
+      };
+
+      recorder.onstop = async () => {
+        // Stop all tracks
+        stream.getTracks().forEach((track) => track.stop());
+
+        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const fileName = `voice_${callType}_${Date.now()}.webm`;
+        const recordedFile = new File([audioBlob], fileName, { type: "audio/webm" });
+
+        setIsUploading(true);
+        setUploadStatus("Uploading live recording...");
+
+        try {
+          const url = await uploadAsset(recordedFile, "shouts");
+          setMp3Url(url);
+          setUploadStatus("Live voice recording saved & uploaded successfully!");
+          if (!title) {
+            setTitle(`${callType.toUpperCase()} Recorded Shout`);
+          }
+        } catch (err: any) {
+          // Local fallback URL if storage fails
+          const dataUrl = URL.createObjectURL(audioBlob);
+          setMp3Url(dataUrl);
+          setUploadStatus("Live voice recording ready!");
+          if (!title) {
+            setTitle(`${callType.toUpperCase()} Recorded Shout`);
+          }
+        } finally {
+          setIsUploading(false);
+        }
+      };
+
+      recorder.start(200);
+      mediaRecorderRef.current = recorder;
+      setIsRecording(true);
+      setUploadStatus("Recording live audio... Speak into microphone!");
+    } catch (err: any) {
+      alert(`Microphone permission error: ${err.message || "Microphone access denied"}`);
+    }
+  }
+
+  function stopRecording() {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  }
 
   const filteredShouts = selectedCallType === "all"
     ? shouts
@@ -79,13 +156,19 @@ export function ShoutsSection() {
     setPackName(shout.packName || "Custom Voice Pack");
   }
 
+  const formatSecs = (secs: number) => {
+    const mins = Math.floor(secs / 60);
+    const rem = secs % 60;
+    return `${String(mins).padStart(2, "0")}:${String(rem).padStart(2, "0")}`;
+  };
+
   return (
     <div style={{ color: "#f8fafc" }}>
       <h1 style={{ margin: "0 0 8px 0", color: "#f59e0b", fontSize: "1.6rem" }}>
-        📢 Audio Shouts (Gritos) Management
+        📢 Audio Shouts (Gritos) & Voice Recording
       </h1>
       <p style={{ color: "#94a3b8", maxWidth: "600px", lineHeight: 1.5, marginBottom: "24px" }}>
-        Configure custom MP3 audio shouts played during matches when players make game calls (Envido, Truco, Re-Truco, Mazo, etc.).
+        Record live voice shouts via microphone or upload custom MP3 audio files played during matches (Envido, Truco, Re-Truco, Mazo, etc.).
       </p>
 
       {/* Add / Edit Form Card */}
@@ -101,7 +184,7 @@ export function ShoutsSection() {
         }}
       >
         <h3 style={{ margin: "0 0 14px 0", color: "#60a5fa", fontSize: "1.1rem" }}>
-          {editingId ? "Edit Audio Shout MP3" : "Add New Audio Shout MP3"}
+          {editingId ? "Edit Audio Shout" : "Add or Record New Audio Shout"}
         </h3>
 
         {uploadStatus && (
@@ -109,6 +192,69 @@ export function ShoutsSection() {
             {uploadStatus}
           </div>
         )}
+
+        {/* Live Microphone Recorder Box */}
+        <div
+          style={{
+            background: isRecording ? "rgba(220, 38, 38, 0.15)" : "rgba(15, 23, 42, 0.6)",
+            border: isRecording ? "2px solid #ef4444" : "1px solid rgba(255, 255, 255, 0.1)",
+            borderRadius: "12px",
+            padding: "14px",
+            marginBottom: "16px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <div>
+            <div style={{ fontWeight: "bold", fontSize: "0.9rem", color: isRecording ? "#fca5a5" : "#f8fafc" }}>
+              🎙️ Live Microphone Voice Recorder
+            </div>
+            <div style={{ fontSize: "0.75rem", color: "#94a3b8", marginTop: "2px" }}>
+              {isRecording ? `RECORDING... (${formatSecs(recordingSeconds)})` : "Click start to record your voice directly"}
+            </div>
+          </div>
+
+          <div>
+            {isRecording ? (
+              <button
+                type="button"
+                onClick={stopRecording}
+                style={{
+                  padding: "8px 16px",
+                  background: "#dc2626",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                  fontSize: "0.85rem",
+                  animation: "pulse 1s infinite",
+                }}
+              >
+                ⏹️ Stop Recording ({formatSecs(recordingSeconds)})
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={startRecording}
+                disabled={isUploading}
+                style={{
+                  padding: "8px 16px",
+                  background: "#16a34a",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontWeight: "bold",
+                  cursor: isUploading ? "not-allowed" : "pointer",
+                  fontSize: "0.85rem",
+                }}
+              >
+                🔴 Start Recording Voice
+              </button>
+            )}
+          </div>
+        </div>
 
         <form onSubmit={handleSaveShout} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
@@ -168,7 +314,7 @@ export function ShoutsSection() {
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. TRUCO Fuerte Grito #1"
+              placeholder="e.g. TRUCO Live Voice Shout"
               required
               style={{
                 width: "100%",
@@ -185,14 +331,14 @@ export function ShoutsSection() {
 
           <div>
             <label style={{ fontSize: "0.8rem", color: "#94a3b8", display: "block", marginBottom: "4px" }}>
-              MP3 Audio URL:
+              Audio File URL (or record/upload above):
             </label>
             <div style={{ display: "flex", gap: "10px" }}>
               <input
-                type="url"
+                type="text"
                 value={mp3Url}
                 onChange={(e) => setMp3Url(e.target.value)}
-                placeholder="https://example.com/audio/truco.mp3"
+                placeholder="Recorded audio URL or https://..."
                 required
                 style={{
                   flex: 1,
@@ -220,7 +366,7 @@ export function ShoutsSection() {
                 {isUploading ? "Uploading..." : "Upload MP3"}
                 <input
                   type="file"
-                  accept="audio/mp3,audio/mpeg,audio/ogg,audio/wav"
+                  accept="audio/*"
                   onChange={handleAudioFileUpload}
                   style={{ display: "none" }}
                   disabled={isUploading}
@@ -276,7 +422,7 @@ export function ShoutsSection() {
             )}
             <button
               type="submit"
-              disabled={isUploading}
+              disabled={isUploading || isRecording}
               style={{
                 flex: 1,
                 padding: "10px 16px",
@@ -285,7 +431,7 @@ export function ShoutsSection() {
                 color: "#ffffff",
                 border: "none",
                 fontWeight: "bold",
-                cursor: isUploading ? "not-allowed" : "pointer",
+                cursor: isUploading || isRecording ? "not-allowed" : "pointer",
               }}
             >
               {editingId ? "Save Changes" : "Save Audio Shout"}
