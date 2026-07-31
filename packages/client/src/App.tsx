@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Client } from "boardgame.io/react";
 import { TrucoGame } from "shared";
 import { TrucoBoard } from "./TrucoBoard.js";
@@ -10,6 +11,12 @@ import { MatchmakingQueue } from "./MatchmakingQueue.js";
 import { AuthProvider, useAuth, getCountryFlag } from "./AuthContext.js";
 import { I18nProvider, useI18n } from "./i18n/I18nContext.js";
 import { StorageProvider } from "./storage/StorageContext.js";
+import { AdminLayout } from "./admin/AdminLayout.js";
+import { UsersSection } from "./admin/UsersSection.js";
+import { DecksSection } from "./admin/DecksSection.js";
+import { I18nSection } from "./admin/I18nSection.js";
+import { StorageSection } from "./admin/StorageSection.js";
+import { PaymentsSection } from "./admin/PaymentsSection.js";
 
 // boardgame.io Client wrappers
 const PeligrosoClient1v1AI = Client({
@@ -558,12 +565,24 @@ function MainApp() {
 
 export function App() {
   return (
-    <StorageProvider>
-      <I18nProvider>
-        <AuthProvider>
-          <MainApp />
-        </AuthProvider>
-      </I18nProvider>
-    </StorageProvider>
+    <BrowserRouter>
+      <StorageProvider>
+        <I18nProvider>
+          <AuthProvider>
+            <Routes>
+              <Route path="/admin/*" element={<AdminLayout />}>
+                <Route index element={<Navigate to="users" replace />} />
+                <Route path="users" element={<UsersSection />} />
+                <Route path="decks" element={<DecksSection />} />
+                <Route path="i18n" element={<I18nSection />} />
+                <Route path="storage" element={<StorageSection />} />
+                <Route path="payments" element={<PaymentsSection />} />
+              </Route>
+              <Route path="/*" element={<MainApp />} />
+            </Routes>
+          </AuthProvider>
+        </I18nProvider>
+      </StorageProvider>
+    </BrowserRouter>
   );
 }
