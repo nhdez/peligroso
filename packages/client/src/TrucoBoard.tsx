@@ -267,66 +267,68 @@ export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps
         >
           {/* App Header & Match Tracker */}
           <div style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", paddingBottom: "10px" }}>
-            <h2 style={{ margin: 0, fontSize: "1.25rem", color: "#f59e0b", letterSpacing: "0.5px" }}>
-              🔥 Peligroso
+            <h2 style={{ margin: 0, fontSize: "1.2rem", color: "#f59e0b", letterSpacing: "0.5px", fontWeight: "bold" }}>
+              Peligroso
             </h2>
             <div style={{ fontSize: "0.75rem", color: "#94a3b8", marginTop: "4px" }}>
-              Hand #{G.handNumber} — P{myID} ({profile?.username || "Guest"}) {isMano && "🖐️ (Mano)"}
+              Hand #{G.handNumber} — P{myID} ({profile?.username || "Guest"}) {isMano && <span style={{ fontSize: "0.65rem", background: "rgba(245,158,11,0.2)", color: "#f59e0b", padding: "1px 6px", borderRadius: "4px", fontWeight: "bold", marginLeft: "4px" }}>MANO</span>}
             </div>
           </div>
 
           {/* Integrated Scoreboard */}
           <div>
-            <div style={{ fontSize: "0.7rem", color: "#94a3b8", textTransform: "uppercase", fontWeight: "bold", marginBottom: "6px" }}>
-              🏆 Match Score
+            <div style={{ fontSize: "0.7rem", color: "#94a3b8", textTransform: "uppercase", fontWeight: "bold", marginBottom: "8px", letterSpacing: "0.5px" }}>
+              Match Score
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
               <div
                 style={{
                   textAlign: "center",
-                  padding: "6px",
-                  background: teamOf(myID, G.numPlayers) === "0" ? "rgba(59, 130, 246, 0.25)" : "rgba(255,255,255,0.04)",
+                  padding: "8px 6px",
+                  background: teamOf(myID, G.numPlayers) === "0" ? "rgba(59, 130, 246, 0.2)" : "rgba(255,255,255,0.03)",
                   borderRadius: "10px",
                   border: teamOf(myID, G.numPlayers) === "0" ? "1px solid #3b82f6" : "1px solid rgba(255,255,255,0.08)",
                 }}
               >
-                <div style={{ fontSize: "0.65rem", color: "#94a3b8", textTransform: "uppercase" }}>
-                  Team 0 {G.manoID === "0" && "🖐️"}
+                <div style={{ fontSize: "0.75rem", color: "#60a5fa", fontWeight: "bold", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }} title={G.numPlayers === 2 ? (myID === "0" ? (profile?.username || "Player 0") : "Player 0") : "Team 0"}>
+                  {G.numPlayers === 2 ? (myID === "0" ? (profile?.username || "Player 0") : "Player 0") : "Team 0"}
+                  {G.manoID === "0" && <span style={{ fontSize: "0.6rem", background: "rgba(245,158,11,0.2)", color: "#f59e0b", padding: "1px 4px", borderRadius: "4px", marginLeft: "4px", fontWeight: "bold" }}>M</span>}
                 </div>
-                <div style={{ fontSize: "1.3rem", fontWeight: "bold", color: "#60a5fa" }}>
-                  {G.scores["0"]} <span style={{ fontSize: "0.75rem", color: "#64748b" }}>/30</span>
+                <div style={{ fontSize: "1.4rem", fontWeight: "bold", color: "#f8fafc", marginTop: "2px" }}>
+                  {G.scores["0"]} <span style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "normal" }}>/ 30</span>
                 </div>
               </div>
 
               <div
                 style={{
                   textAlign: "center",
-                  padding: "6px",
-                  background: teamOf(myID, G.numPlayers) === "1" ? "rgba(59, 130, 246, 0.25)" : "rgba(255,255,255,0.04)",
+                  padding: "8px 6px",
+                  background: teamOf(myID, G.numPlayers) === "1" ? "rgba(59, 130, 246, 0.2)" : "rgba(255,255,255,0.03)",
                   borderRadius: "10px",
                   border: teamOf(myID, G.numPlayers) === "1" ? "1px solid #3b82f6" : "1px solid rgba(255,255,255,0.08)",
                 }}
               >
-                <div style={{ fontSize: "0.65rem", color: "#94a3b8", textTransform: "uppercase" }}>
-                  Team 1 {G.manoID === "1" && "🖐️"}
+                <div style={{ fontSize: "0.75rem", color: "#f472b6", fontWeight: "bold", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }} title={G.numPlayers === 2 ? (myID === "1" ? (profile?.username || "Player 1") : `Player 1`) : "Team 1"}>
+                  {G.numPlayers === 2 ? (myID === "1" ? (profile?.username || "Player 1") : `Player 1`) : "Team 1"}
+                  {G.manoID === "1" && <span style={{ fontSize: "0.6rem", background: "rgba(245,158,11,0.2)", color: "#f59e0b", padding: "1px 4px", borderRadius: "4px", marginLeft: "4px", fontWeight: "bold" }}>M</span>}
                 </div>
-                <div style={{ fontSize: "1.3rem", fontWeight: "bold", color: "#f472b6" }}>
-                  {G.scores["1"]} <span style={{ fontSize: "0.75rem", color: "#64748b" }}>/30</span>
+                <div style={{ fontSize: "1.4rem", fontWeight: "bold", color: "#f8fafc", marginTop: "2px" }}>
+                  {G.scores["1"]} <span style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "normal" }}>/ 30</span>
                 </div>
               </div>
             </div>
           </div>
           {/* Active Phase Badge */}
           <div>
-            <div style={{ fontSize: "0.75rem", color: "#94a3b8", textTransform: "uppercase", fontWeight: "bold", marginBottom: "6px" }}>
+            <div style={{ fontSize: "0.7rem", color: "#94a3b8", textTransform: "uppercase", fontWeight: "bold", marginBottom: "6px" }}>
               {t("phase.title")}
             </div>
             <div
               style={{
-                padding: "10px 14px",
-                borderRadius: "14px",
+                padding: "8px 12px",
+                borderRadius: "12px",
                 fontWeight: "bold",
-                fontSize: "0.9rem",
+                fontSize: "0.85rem",
                 textAlign: "center",
                 background:
                   G.phase === "PRIMERA"
@@ -349,7 +351,7 @@ export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps
                 }`,
               }}
             >
-              📍 {G.phase}
+              {G.phase}
               <div style={{ fontSize: "0.75rem", fontWeight: "normal", marginTop: "2px", opacity: 0.9 }}>
                 {PHASE_DESCRIPTIONS[G.phase]}
               </div>
@@ -358,10 +360,10 @@ export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps
 
           {/* 3-Phase Breakdown */}
           <div>
-            <div style={{ fontSize: "0.75rem", color: "#94a3b8", textTransform: "uppercase", fontWeight: "bold", marginBottom: "8px" }}>
+            <div style={{ fontSize: "0.7rem", color: "#94a3b8", textTransform: "uppercase", fontWeight: "bold", marginBottom: "8px" }}>
               {t("phase.breakdown")}
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
               {(["PRIMERA", "SEGUNDA", "TERCERA"] as HandPhase[]).map((ph, i) => {
                 const trick = G.tricks[i];
                 const isCurrent = G.phase === ph;
@@ -369,24 +371,24 @@ export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps
                   <div
                     key={ph}
                     style={{
-                      padding: "8px 12px",
-                      borderRadius: "10px",
+                      padding: "6px 10px",
+                      borderRadius: "8px",
                       background: isCurrent ? "rgba(59, 130, 246, 0.15)" : "rgba(255,255,255,0.03)",
                       border: isCurrent ? "1px solid #3b82f6" : "1px solid rgba(255,255,255,0.06)",
-                      fontSize: "0.8rem",
+                      fontSize: "0.78rem",
                     }}
                   >
                     <div style={{ fontWeight: "bold", color: isCurrent ? "#60a5fa" : "#cbd5e1" }}>
                       {i + 1}. {ph}
                     </div>
-                    <div style={{ fontSize: "0.75rem", color: "#94a3b8", marginTop: "2px" }}>
+                    <div style={{ fontSize: "0.72rem", color: "#94a3b8", marginTop: "2px" }}>
                       {!trick
                         ? isCurrent
                           ? t("phase.in_progress")
                           : t("phase.pending")
                         : trick.winnerID === null
                         ? t("phase.tied")
-                        : `🏆 Winner: Player ${trick.winnerID}`}
+                        : `Winner: Player ${trick.winnerID}`}
                     </div>
                   </div>
                 );
@@ -431,7 +433,7 @@ export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: "bold" }}>
-              <span>🏟️</span> {t("table.arena", { name: activeMatOwnerName })} | 🎴 {activeDeckTheme.name}
+              {t("table.arena", { name: activeMatOwnerName })} | Deck: {activeDeckTheme.name}
             </div>
 
             {/* Subtle Compact Event Notice (Envido Showdown, Fold, Atorado) */}
