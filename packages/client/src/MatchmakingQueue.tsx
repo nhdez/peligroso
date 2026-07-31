@@ -1,6 +1,4 @@
-import React, { useState, useEffect } from "react";
-import { useAuth, getCountryFlag } from "./AuthContext.js";
-import { supabase, isSupabaseConfigured } from "./supabaseClient.js";
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:8000";
 
 interface MatchmakingQueueProps {
   onMatchFound: (matchID: string, assignedPlayerID: string, opponentName: string) => void;
@@ -22,15 +20,64 @@ export function MatchmakingQueue({ onMatchFound, onCancel, onSwitchToAI }: Match
   }, []);
 
   useEffect(() => {
+    let pollInterval: any = null;
     let channel: any = null;
+    let isMatched = false;
 
     async function initQueue() {
       const myId = profile?.id || `guest-${Math.random().toString(36).substring(2, 7)}`;
       const myName = profile?.username || "Guest Player";
 
-      if (isSupabaseConfigured && supabase) {
+      // 1. Try Server Matchmaking Queue API First
+      try {
+        const res = await fetch(`${SERVER_URL}/api/matchmaking/join`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: myId, userName: myName }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.status === "paired" && data.roomId) {
+            isMatched = true;
+            setStatusMessage(`Opponent found! Connecting to ${data.opponentName || "Player 1"}...`);
+            setTimeout(() => {
+              onMatchFound(data.roomId, data.assignedPlayerId, data.opponentName || "Player 1");
+            }, 800);
+            return;
+          } else if (data.status === "waiting" && data.roomId) {
+            setCreatedRoomId(data.roomId);
+            setStatusMessage("Waiting for an opponent to join...");
+
+            // Poll server for paired status every 1.5 seconds
+            pollInterval = setInterval(async () => {
+              if (isMatched) return;
+              try {
+                const checkRes = await fetch(`${SERVER_URL}/api/matchmaking/status/${data.roomId}`);
+                if (checkRes.ok) {
+                  const checkData = await checkRes.json();
+                  if (checkData.status === "paired" && !isMatched) {
+                    isMatched = true;
+                    clearInterval(pollInterval);
+                    setStatusMessage(`Opponent found! Match starting against ${checkData.player2Name || "Player 2"}...`);
+                    setTimeout(() => {
+                      onMatchFound(data.roomId, "0", checkData.player2Name || "Player 2");
+                    }, 800);
+                  }
+                }
+              } catch (e) {
+                console.error("Queue poll error:", e);
+              }
+            }, 1500);
+          }
+        }
+      } catch (serverErr) {
+        console.warn("Server matchmaking fallback to Supabase:", serverErr);
+      }
+
+      // 2. Supabase Dual Sync Backup
+      if (isSupabaseConfigured && supabase && !isMatched) {
         try {
-          // 1. Check if there is an existing waiting room from another player
           const { data: existingRooms, error } = await supabase
             .from("matchmaking_queue")
             .select("*")
@@ -39,11 +86,11 @@ export function MatchmakingQueue({ onMatchFound, onCancel, onSwitchToAI }: Match
             .order("created_at", { ascending: true })
             .limit(1);
 
-          if (existingRooms && existingRooms.length > 0 && !error) {
+          if (existingRooms && existingRooms.length > 0 && !error && !isMatched) {
             const openRoom = existingRooms[0];
+            isMatched = true;
             setStatusMessage(`Opponent found! Connecting to ${openRoom.player1_name}...`);
 
-            // Pair with this open room
             await supabase
               .from("matchmaking_queue")
               .update({
@@ -55,59 +102,56 @@ export function MatchmakingQueue({ onMatchFound, onCancel, onSwitchToAI }: Match
 
             setTimeout(() => {
               onMatchFound(openRoom.room_id, "1", openRoom.player1_name);
-            }, 1000);
+            }, 800);
             return;
           }
 
-          // 2. If no open room, create a new room and wait as Player 1
-          const newRoomId = `room-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-          setCreatedRoomId(newRoomId);
-          setStatusMessage("Waiting for an opponent to join...");
+          if (!createdRoomId) {
+            const newRoomId = `room-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+            setCreatedRoomId(newRoomId);
 
-          await supabase.from("matchmaking_queue").insert([
-            {
-              room_id: newRoomId,
-              player1_id: myId,
-              player1_name: myName,
-              status: "waiting",
-            },
-          ]);
-
-          // Listen for Player 2 joining this room
-          channel = supabase
-            .channel(`matchmaking_${newRoomId}`)
-            .on(
-              "postgres_changes",
+            await supabase.from("matchmaking_queue").insert([
               {
-                event: "UPDATE",
-                schema: "public",
-                table: "matchmaking_queue",
-                filter: `room_id=eq.${newRoomId}`,
+                room_id: newRoomId,
+                player1_id: myId,
+                player1_name: myName,
+                status: "waiting",
               },
-              (payload) => {
-                const updated = payload.new as any;
-                if (updated.status === "paired") {
-                  setStatusMessage(`Opponent found! Match starting against ${updated.player2_name || "Player 2"}...`);
-                  setTimeout(() => {
-                    onMatchFound(newRoomId, "0", updated.player2_name || "Player 2");
-                  }, 1000);
+            ]);
+
+            channel = supabase
+              .channel(`matchmaking_${newRoomId}`)
+              .on(
+                "postgres_changes",
+                {
+                  event: "UPDATE",
+                  schema: "public",
+                  table: "matchmaking_queue",
+                  filter: `room_id=eq.${newRoomId}`,
+                },
+                (payload) => {
+                  const updated = payload.new as any;
+                  if (updated.status === "paired" && !isMatched) {
+                    isMatched = true;
+                    setStatusMessage(`Opponent found! Match starting against ${updated.player2_name || "Player 2"}...`);
+                    setTimeout(() => {
+                      onMatchFound(newRoomId, "0", updated.player2_name || "Player 2");
+                    }, 800);
+                  }
                 }
-              }
-            )
-            .subscribe();
+              )
+              .subscribe();
+          }
         } catch (err) {
-          console.error("Matchmaking error:", err);
-          setStatusMessage("Matchmaking server delay. Searching...");
+          console.error("Supabase matchmaking error:", err);
         }
-      } else {
-        // Fallback for local guest testing mode without live Supabase credentials
-        setStatusMessage("Searching local player pool...");
       }
     }
 
     initQueue();
 
     return () => {
+      if (pollInterval) clearInterval(pollInterval);
       if (channel && supabase) {
         supabase.removeChannel(channel);
       }
@@ -115,11 +159,21 @@ export function MatchmakingQueue({ onMatchFound, onCancel, onSwitchToAI }: Match
   }, []);
 
   async function handleCancel() {
-    if (createdRoomId && isSupabaseConfigured && supabase) {
-      await supabase
-        .from("matchmaking_queue")
-        .update({ status: "cancelled" })
-        .eq("room_id", createdRoomId);
+    if (createdRoomId) {
+      try {
+        await fetch(`${SERVER_URL}/api/matchmaking/cancel`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ roomId: createdRoomId }),
+        });
+      } catch {}
+
+      if (isSupabaseConfigured && supabase) {
+        await supabase
+          .from("matchmaking_queue")
+          .update({ status: "cancelled" })
+          .eq("room_id", createdRoomId);
+      }
     }
     onCancel();
   }
