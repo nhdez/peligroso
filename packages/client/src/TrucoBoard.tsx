@@ -15,6 +15,7 @@ import { PointStakeMeter } from "./PointStakeMeter.js";
 import { useI18n } from "./i18n/I18nContext.js";
 import { SocialPanel } from "./social/SocialPanel.js";
 import { VideoAvatar } from "./social/VideoAvatar.js";
+import { SuerteDeReyesModal } from "./SuerteDeReyesModal.js";
 
 
 
@@ -1028,11 +1029,20 @@ export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps
           onLeaveMatch={onLeaveMatch}
         />
       </div>
+
+      {/* Suerte de Reyes Opening Ritual Modal */}
+      {G.suerteDeReyes?.active && (
+        <SuerteDeReyesModal
+          suerteDeReyes={G.suerteDeReyes}
+          cardFaces={activeDeckTheme?.cardFaces}
+          onComplete={() => moves.completeSuerteDeReyes && moves.completeSuerteDeReyes()}
+        />
+      )}
     </div>
   );
 }
 
-function RenderCard({
+export function RenderCard({
   card,
   isPlayable = false,
   cardFaces,

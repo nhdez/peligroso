@@ -12,7 +12,7 @@ import {
   EnvidoCallType,
   TrucoCallType,
 } from "./rules.js";
-import { TrucoGameState, teamOf, PlayerID, getHandPhase } from "./types.js";
+import { TrucoGameState, teamOf, PlayerID, getHandPhase, SuerteDeReyesState, SuerteDeReyesStep } from "./types.js";
 
 function dealHands(numPlayers: 2 | 4): { deck: Card[]; hands: Record<string, Card[]> } {
   const deck = shuffle(buildDeck());
@@ -201,11 +201,47 @@ function checkEarlyHandWinner(G: TrucoGameState): { winnerID: PlayerID; reason: 
   return null;
 }
 
+function runSuerteDeReyes(numPlayers: 2 | 4): { suerteDeReyes: SuerteDeReyesState; winnerID: PlayerID } {
+  const suerteDeck = shuffle(buildDeck());
+  const history: SuerteDeReyesStep[] = [];
+  let winnerID: PlayerID = "0";
+
+  let currentPlayer = 0;
+  for (let i = 0; i < suerteDeck.length; i++) {
+    const card = suerteDeck[i];
+    const pID = String(currentPlayer);
+    const isKing = card.rank === 12;
+
+    history.push({
+      playerID: pID,
+      card,
+      isKing,
+    });
+
+    if (isKing) {
+      winnerID = pID;
+      break;
+    }
+    currentPlayer = (currentPlayer + 1) % numPlayers;
+  }
+
+  return {
+    suerteDeReyes: {
+      active: true,
+      history,
+      winnerID,
+    },
+    winnerID,
+  };
+}
+
 export const TrucoGame: Game<TrucoGameState> = {
   name: "peligroso",
 
   setup: ({ ctx }) => {
     const numPlayers = (ctx.numPlayers as 2 | 4) ?? 2;
+    const { suerteDeReyes, winnerID } = runSuerteDeReyes(numPlayers);
+
     const { deck, hands } = dealHands(numPlayers);
     const tableCards: Record<string, Card[]> = {};
     for (let p = 0; p < numPlayers; p++) tableCards[String(p)] = [];
@@ -217,7 +253,7 @@ export const TrucoGame: Game<TrucoGameState> = {
       tableCards,
       tricks: [],
       phase: "PRIMERA",
-      manoID: "0",
+      manoID: winnerID,
       scores: { "0": 0, "1": 0 },
       currentEnvidoCall: null,
       currentTrucoCall: null,
@@ -229,9 +265,11 @@ export const TrucoGame: Game<TrucoGameState> = {
       winner: null,
       logs: [],
       handNumber: 1,
+      suerteDeReyes,
     };
 
-    addLog(initialState, "Game started! Player 0 is Mano (Phase: PRIMERA).");
+    const winningStep = suerteDeReyes.history[suerteDeReyes.history.length - 1];
+    addLog(initialState, `👑 Suerte de Reyes: Player ${winnerID} drew the 12 de ${winningStep.card.suit}! Player ${winnerID} is Mano and deals first.`);
     return initialState;
   },
 
@@ -709,6 +747,12 @@ export const TrucoGame: Game<TrucoGameState> = {
           };
         }
       });
+    },
+
+    completeSuerteDeReyes: ({ G }) => {
+      if (G.suerteDeReyes) {
+        G.suerteDeReyes.active = false;
+      }
     },
   },
 

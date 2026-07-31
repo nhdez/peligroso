@@ -80,6 +80,18 @@ export interface DisconnectRecord {
   expiresAt: number; // Date.now() + 60000
 }
 
+export interface SuerteDeReyesStep {
+  playerID: PlayerID;
+  card: Card;
+  isKing: boolean;
+}
+
+export interface SuerteDeReyesState {
+  active: boolean;
+  history: SuerteDeReyesStep[];
+  winnerID: PlayerID | null;
+}
+
 export interface TrucoGameState {
   numPlayers: 2 | 4;
   deck: Card[];
@@ -100,6 +112,7 @@ export interface TrucoGameState {
   logs: GameLogMessage[];
   handNumber: number;
   disconnectedPlayers?: Record<PlayerID, DisconnectRecord | null>;
+  suerteDeReyes?: SuerteDeReyesState | null;
 }
 
 
