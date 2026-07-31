@@ -60,7 +60,7 @@ export function PointStakeMeter({ G }: { G: TrucoGameState }) {
         boxShadow: isCallActive ? "0 8px 24px rgba(245, 158, 11, 0.25)" : "none",
         padding: "12px 18px",
         boxSizing: "border-box",
-        margin: "0 auto 12px auto",
+        margin: "32px auto 12px auto",
         transition: "all 0.3s ease",
       }}
     >

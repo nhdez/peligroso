@@ -981,7 +981,7 @@ export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps
                           borderRadius: "10px",
                         }}
                       >
-                        <RenderCard card={card} isPlayable={canPlayCards} cardFaces={activeDeckTheme?.cardFaces} />
+                        <RenderCard card={card} isPlayable={canPlayCards} cardFaces={activeDeckTheme?.cardFaces} width={90} height={135} />
                       </div>
                     );
                   })}
@@ -1012,10 +1012,14 @@ function RenderCard({
   card,
   isPlayable = false,
   cardFaces,
+  width = 85,
+  height = 128,
 }: {
   card: Card;
   isPlayable?: boolean;
   cardFaces?: Record<string, string>;
+  width?: number;
+  height?: number;
 }) {
   const customFaceUrl = cardFaces?.[card.id];
 
@@ -1023,8 +1027,8 @@ function RenderCard({
     return (
       <div
         style={{
-          width: "70px",
-          height: "105px",
+          width: `${width}px`,
+          height: `${height}px`,
           borderRadius: "10px",
           border: isPlayable ? "2px solid #3b82f6" : "1px solid #cbd5e1",
           boxShadow: isPlayable ? "0 4px 12px rgba(59, 130, 246, 0.4)" : "0 4px 8px rgba(0,0,0,0.3)",
@@ -1049,8 +1053,8 @@ function RenderCard({
   return (
     <div
       style={{
-        width: "70px",
-        height: "105px",
+        width: `${width}px`,
+        height: `${height}px`,
         background: "#ffffff",
         borderRadius: "10px",
         border: isPlayable ? "2px solid #3b82f6" : "1px solid #cbd5e1",
@@ -1064,11 +1068,11 @@ function RenderCard({
         color,
       }}
     >
-      <div style={{ fontSize: "0.85rem", fontWeight: "bold", textAlign: "left" }}>
+      <div style={{ fontSize: `${width * 0.16}px`, fontWeight: "bold", textAlign: "left" }}>
         {card.rank}
       </div>
-      <div style={{ fontSize: "1.6rem", textAlign: "center" }}>{icon}</div>
-      <div style={{ fontSize: "0.7rem", textTransform: "capitalize", textAlign: "right", fontWeight: 600 }}>
+      <div style={{ fontSize: `${width * 0.32}px`, textAlign: "center" }}>{icon}</div>
+      <div style={{ fontSize: `${width * 0.13}px`, textTransform: "capitalize", textAlign: "right", fontWeight: 600 }}>
         {card.suit}
       </div>
     </div>

@@ -286,63 +286,62 @@ export function SocialPanel({
           🎙️ Voice & Video Controls
         </div>
 
-        <div style={{ display: "flex", gap: "6px", marginBottom: "8px", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "8px" }}>
           {/* Mic Toggle Button */}
           <button
             onClick={handleToggleMic}
             style={{
-              flex: 1,
-              padding: "6px 8px",
+              width: "100%",
+              padding: "8px 12px",
               borderRadius: "8px",
               border: "none",
-              background: !micActive
-                ? "#475569"
-                : isMicMuted
-                ? "#dc2626"
-                : "#059669",
+              background: !micActive ? "#334155" : isMicMuted ? "#dc2626" : "#059669",
               color: "#ffffff",
               fontWeight: "bold",
-              fontSize: "0.7rem",
+              fontSize: "0.8rem",
               cursor: "pointer",
+              textAlign: "center",
             }}
           >
-            {!micActive ? "🎙️ Mic" : isMicMuted ? "🔇 Muted" : "🎤 Active"}
+            {!micActive ? "Microphone: Off" : isMicMuted ? "Microphone: Muted" : "Microphone: Active"}
           </button>
 
-          {/* Video Avatar Button */}
+          {/* Video Stream Button */}
           <button
             onClick={handleToggleVideo}
             style={{
-              flex: 1,
-              padding: "6px 8px",
+              width: "100%",
+              padding: "8px 12px",
               borderRadius: "8px",
               border: "none",
               background: isVideoActive ? "#059669" : "#d97706",
               color: "#ffffff",
               fontWeight: "bold",
-              fontSize: "0.7rem",
+              fontSize: "0.8rem",
               cursor: "pointer",
+              textAlign: "center",
             }}
           >
-            {isVideoActive ? "📷 Live Cam" : "📷 Start Cam"}
+            {isVideoActive ? "Camera Stream: Active" : "Camera Stream: Off"}
           </button>
 
           {/* Deafen Button */}
           <button
             onClick={handleToggleDeafen}
             style={{
-              flex: 1,
-              padding: "6px 8px",
+              width: "100%",
+              padding: "8px 12px",
               borderRadius: "8px",
               border: "none",
               background: isDeafened ? "#dc2626" : "#2563eb",
               color: "#ffffff",
               fontWeight: "bold",
-              fontSize: "0.7rem",
+              fontSize: "0.8rem",
               cursor: "pointer",
+              textAlign: "center",
             }}
           >
-            {isDeafened ? "🔇 Deaf" : "🔊 Audio On"}
+            {isDeafened ? "Audio Output: Muted" : "Audio Output: Active"}
           </button>
         </div>
 
@@ -480,7 +479,7 @@ export function SocialPanel({
           </div>
 
           {/* Chat Input Form */}
-          <form onSubmit={handleSendMessage} style={{ display: "flex", gap: "6px" }}>
+          <form onSubmit={handleSendMessage} style={{ display: "flex", gap: "8px", width: "100%" }}>
             <input
               type="text"
               placeholder="Send message..."
@@ -488,6 +487,7 @@ export function SocialPanel({
               onChange={(e) => setInputText(e.target.value)}
               style={{
                 flex: 1,
+                minWidth: 0,
                 padding: "8px 12px",
                 borderRadius: "8px",
                 background: "#0f172a",
@@ -499,7 +499,7 @@ export function SocialPanel({
             <button
               type="submit"
               style={{
-                padding: "8px 12px",
+                padding: "8px 16px",
                 borderRadius: "8px",
                 border: "none",
                 background: "#2563eb",
@@ -507,6 +507,7 @@ export function SocialPanel({
                 fontWeight: "bold",
                 fontSize: "0.8rem",
                 cursor: "pointer",
+                flexShrink: 0,
               }}
             >
               Send
