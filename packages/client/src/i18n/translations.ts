@@ -8,7 +8,7 @@ export const DEFAULT_TRANSLATIONS: Record<string, TranslationDictionary> = {
   es: {
     // Header & Navigation
     "app.title": "🔥 Peligroso",
-    "app.subtitle": "Seleccioná un modo de juego para empezar",
+    "app.subtitle": "Selecciona un modo de juego para empezar",
     "app.leave": "← Salir de la partida",
     "app.account": "Cuenta y Personalización",
     "app.admin": "🛡️ Consola Admin",
@@ -24,7 +24,7 @@ export const DEFAULT_TRANSLATIONS: Record<string, TranslationDictionary> = {
 
     // Active Session Reconnection Banner
     "active_session.title": "¡Partida en Progreso! (Partida #{id})",
-    "active_session.desc": "Te desconectaste o recargaste la página. Hacé clic abajo para volver a la partida.",
+    "active_session.desc": "Te desconectaste o recargaste la página. Haz clic abajo para volver a la partida.",
     "active_session.rejoin": "⚡ Volver a la Partida",
     "active_session.abandon": "Abandonar Sesión ❌",
 
@@ -39,7 +39,7 @@ export const DEFAULT_TRANSLATIONS: Record<string, TranslationDictionary> = {
     "phase.breakdown": "Desglose de Manos",
     "phase.in_progress": "En Progreso...",
     "phase.pending": "Pendiente",
-    "phase.tied": "🤝 Emparde (Parda)",
+    "phase.tied": "🤝 Empate (Parda)",
 
     // Game Actions & Calls
     "call.envido": "Envido (2)",
@@ -63,19 +63,19 @@ export const DEFAULT_TRANSLATIONS: Record<string, TranslationDictionary> = {
     "stake.active_deck": "Mazo Activo",
 
     // Game Table Status
-    "table.your_turn": "👉 TU TURNO (Jugador {id}) — ¡Arrastrá o hacé clic en una carta!",
+    "table.your_turn": "👉 TU TURNO (Jugador {id}) — ¡Arrastra o haz clic en una carta!",
     "table.waiting": "⏳ Esperando al Jugador {id}...",
-    "table.drop_here": "🖐️ ¡Soltá la carta acá para jugar!",
+    "table.drop_here": "🖐️ ¡Suelta la carta aquí para jugar!",
     "table.opponent_cards": "Cartas jugadas por el oponente (Jugador {id}):",
-    "table.your_cards": "Cartas jugadas por vos:",
-    "table.your_hand": "Tu Mano (Tantos de Envido: {score}) — Arrastrá o hacé clic:",
+    "table.your_cards": "Cartas jugadas por ti:",
+    "table.your_hand": "Tu Mano (Puntos de Envido: {score}) — Arrastra o haz clic:",
     "table.history": "📜 Historial de la Partida",
     "table.arena": "🏟️ Arena: Mat de {name}",
 
     // Voice & Social Panel Controls
-    "social.mic_off": "Microfono: Desactivado",
-    "social.mic_muted": "Microfono: Silenciado",
-    "social.mic_active": "Microfono: Activo",
+    "social.mic_off": "Micrófono: Desactivado",
+    "social.mic_muted": "Micrófono: Silenciado",
+    "social.mic_active": "Micrófono: Activo",
     "social.cam_active": "Cámara: Transmitiendo",
     "social.cam_off": "Cámara: Desactivada",
     "social.audio_muted": "Salida de Audio: Silenciada",
@@ -113,7 +113,7 @@ export const DEFAULT_TRANSLATIONS: Record<string, TranslationDictionary> = {
     "profile.victory_title": "🏆 Tarjeta de Victoria Estilo CS2",
     "profile.victory_img_label": "📸 URL de Imagen / Banner de Victoria",
     "profile.victory_music_label": "🎵 Himno de Victoria (URL de Video de YouTube)",
-    "profile.victory_music_desc": "¡Reproduce 10 segundos de música de victoria cuando ganás!",
+    "profile.victory_music_desc": "¡Reproduce 10 segundos de música de victoria cuando ganas!",
     "profile.victory_quote_label": "💬 Lema / Frase de Victoria",
     "profile.save": "Guardar Cambios",
 
