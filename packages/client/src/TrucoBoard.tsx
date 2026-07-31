@@ -525,41 +525,90 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
               )}
             </div>
 
-            {/* Opponent Cards Played & Video Avatar */}
+            {/* Cards Played Table Zone (2-Player vs 4-Player 2v2) */}
             <div style={{ textAlign: "center", marginBottom: "16px" }}>
-              <div style={{ display: "flex", justifyContent: "center", marginBottom: "10px" }}>
-                <VideoAvatar
-                  stream={null}
-                  username={`Player ${opponentID}`}
-                  size={52}
-                  isCurrentTurn={ctx.currentPlayer === opponentID}
-                />
-              </div>
-              <div style={{ fontSize: "0.85rem", color: "#cbd5e1", marginBottom: "8px", textShadow: "0 1px 3px rgba(0,0,0,0.8)" }}>
-                {t("table.opponent_cards", { id: opponentID })}
-              </div>
-              <div style={{ display: "flex", justifyContent: "center", gap: "12px", minHeight: "100px" }}>
-                {opponentCardsPlayed.map((card, i) => (
-                  <RenderCard key={`opp-played-${card.id}-${i}`} card={card} />
-                ))}
-                {opponentCardsPlayed.length === 0 && (
-                  <div style={{ color: "#94a3b8", fontStyle: "italic", fontSize: "0.85rem" }}>
-                    No cards played yet
+              {G.numPlayers === 4 ? (
+                /* 4-Player 2v2 Table Grid */
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px", alignItems: "center" }}>
+                  {/* Top: Partner (Player 2) */}
+                  <div style={{ background: "rgba(15, 23, 42, 0.6)", padding: "8px 16px", borderRadius: "14px", border: "1px solid rgba(255,255,255,0.1)", width: "100%", maxWidth: "420px" }}>
+                    <div style={{ fontSize: "0.75rem", color: "#60a5fa", fontWeight: "bold", marginBottom: "4px" }}>
+                      🤝 Partner (Player 2 - Team 0) Cards Played:
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "center", gap: "8px", minHeight: "80px" }}>
+                      {(G.tableCards["2"] || []).map((card, i) => (
+                        <RenderCard key={`p2-${card.id}-${i}`} card={card} />
+                      ))}
+                    </div>
                   </div>
-                )}
-              </div>
-            </div>
 
-            {/* My Table Cards Played */}
-            <div style={{ textAlign: "center", marginBottom: "16px" }}>
-              <div style={{ fontSize: "0.85rem", color: "#cbd5e1", marginBottom: "8px", textShadow: "0 1px 3px rgba(0,0,0,0.8)" }}>
-                {t("table.your_cards")}
-              </div>
-              <div style={{ display: "flex", justifyContent: "center", gap: "12px", minHeight: "100px" }}>
-                {myCardsPlayed.map((card, i) => (
-                  <RenderCard key={`my-played-${card.id}-${i}`} card={card} />
-                ))}
-              </div>
+                  {/* Middle: Opponent 1 (Player 1) & Opponent 2 (Player 3) Side-by-Side */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", width: "100%", maxWidth: "520px" }}>
+                    <div style={{ background: "rgba(15, 23, 42, 0.6)", padding: "8px", borderRadius: "14px", border: "1px solid rgba(255,255,255,0.1)" }}>
+                      <div style={{ fontSize: "0.75rem", color: "#f472b6", fontWeight: "bold", marginBottom: "4px" }}>
+                        ⚔️ Opponent (P1)
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "center", gap: "6px", minHeight: "80px" }}>
+                        {(G.tableCards["1"] || []).map((card, i) => (
+                          <RenderCard key={`p1-${card.id}-${i}`} card={card} />
+                        ))}
+                      </div>
+                    </div>
+
+                    <div style={{ background: "rgba(15, 23, 42, 0.6)", padding: "8px", borderRadius: "14px", border: "1px solid rgba(255,255,255,0.1)" }}>
+                      <div style={{ fontSize: "0.75rem", color: "#f472b6", fontWeight: "bold", marginBottom: "4px" }}>
+                        ⚔️ Opponent (P3)
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "center", gap: "6px", minHeight: "80px" }}>
+                        {(G.tableCards["3"] || []).map((card, i) => (
+                          <RenderCard key={`p3-${card.id}-${i}`} card={card} />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bottom: Your Played Cards (Player 0) */}
+                  <div style={{ background: "rgba(15, 23, 42, 0.6)", padding: "8px 16px", borderRadius: "14px", border: "1px solid rgba(255,255,255,0.1)", width: "100%", maxWidth: "420px" }}>
+                    <div style={{ fontSize: "0.75rem", color: "#60a5fa", fontWeight: "bold", marginBottom: "4px" }}>
+                      🎴 Cards Played by You (Player 0):
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "center", gap: "8px", minHeight: "80px" }}>
+                      {(G.tableCards["0"] || []).map((card, i) => (
+                        <RenderCard key={`p0-${card.id}-${i}`} card={card} />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* 2-Player 1v1 Table */
+                <>
+                  <div style={{ display: "flex", justifyContent: "center", marginBottom: "10px" }}>
+                    <VideoAvatar
+                      stream={null}
+                      username={`Player ${opponentID}`}
+                      size={52}
+                      isCurrentTurn={ctx.currentPlayer === opponentID}
+                    />
+                  </div>
+                  <div style={{ fontSize: "0.85rem", color: "#cbd5e1", marginBottom: "8px", textShadow: "0 1px 3px rgba(0,0,0,0.8)" }}>
+                    {t("table.opponent_cards", { id: opponentID })}
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "center", gap: "12px", minHeight: "100px", marginBottom: "16px" }}>
+                    {opponentCardsPlayed.map((card, i) => (
+                      <RenderCard key={`opp-played-${card.id}-${i}`} card={card} />
+                    ))}
+                  </div>
+
+                  <div style={{ fontSize: "0.85rem", color: "#cbd5e1", marginBottom: "8px", textShadow: "0 1px 3px rgba(0,0,0,0.8)" }}>
+                    {t("table.your_cards")}
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "center", gap: "12px", minHeight: "100px" }}>
+                    {myCardsPlayed.map((card, i) => (
+                      <RenderCard key={`my-played-${card.id}-${i}`} card={card} />
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Action Control Panel & My Video Avatar */}

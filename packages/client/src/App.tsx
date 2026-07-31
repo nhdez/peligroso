@@ -10,7 +10,6 @@ import { AdminPanel } from "./AdminPanel.js";
 import { I18nProvider, useI18n } from "./i18n/I18nContext.js";
 import { StorageProvider } from "./storage/StorageContext.js";
 
-
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:8000";
 
 // Online Client
@@ -21,15 +20,25 @@ const OnlineTrucoClient = Client({
   debug: false,
 });
 
-// Pass & Play Local Client
+// Pass & Play Local 1v1 Client
 const LocalTrucoClient = Client({
   game: TrucoGame,
   board: TrucoBoard,
   multiplayer: Local(),
+  numPlayers: 2,
   debug: false,
 });
 
-// AI Single-Player Container
+// Pass & Play Local 2v2 Client
+const Local2v2TrucoClient = Client({
+  game: TrucoGame,
+  board: TrucoBoard,
+  multiplayer: Local(),
+  numPlayers: 4,
+  debug: false,
+});
+
+// 1v1 AI Single-Player Container
 function AiGameContainer() {
   const { updateStats } = useAuth();
 
@@ -49,7 +58,6 @@ function AiGameContainer() {
     const unsubscribe = botClient.subscribe((state) => {
       if (!state) return;
 
-      // Match finished -> record stats
       if (state.ctx.gameover && !statsRecorded) {
         statsRecorded = true;
         const winner = state.ctx.gameover.winner;
@@ -113,7 +121,107 @@ function AiGameContainer() {
   return <LocalTrucoClient matchID="ai-match" playerID="0" />;
 }
 
-type GameMode = "ai" | "local" | "online" | null;
+// 2v2 (4 Players) AI Game Container
+function Ai2v2GameContainer() {
+  const { updateStats } = useAuth();
+
+  useEffect(() => {
+    const botClients = ["1", "2", "3"].map((pid) =>
+      BoardClient({
+        game: TrucoGame,
+        multiplayer: Local(),
+        matchID: "ai-2v2-match",
+        playerID: pid,
+        numPlayers: 4,
+        debug: false,
+      })
+    );
+
+    botClients.forEach((client) => client.start());
+    let isProcessing = false;
+    let statsRecorded = false;
+
+    const mainClient = botClients[0];
+    const unsubscribe = mainClient.subscribe((state) => {
+      if (!state) return;
+
+      if (state.ctx.gameover && !statsRecorded) {
+        statsRecorded = true;
+        const winner = state.ctx.gameover.winner;
+        updateStats(winner === "0");
+        return;
+      }
+
+      if (state.ctx.gameover || isProcessing) return;
+
+      const currentPID = state.ctx.currentPlayer;
+      const isPendingEnvidoResponder =
+        state.G.currentEnvidoCall?.accepted === null &&
+        state.G.currentEnvidoCall?.pendingResponderID !== "0";
+      const isPendingTrucoResponder =
+        state.G.currentTrucoCall?.accepted === null &&
+        state.G.currentTrucoCall?.pendingResponderID !== "0";
+
+      let actingBotID: string | null = null;
+
+      if (isPendingEnvidoResponder) {
+        actingBotID = state.G.currentEnvidoCall!.pendingResponderID;
+      } else if (isPendingTrucoResponder) {
+        actingBotID = state.G.currentTrucoCall!.pendingResponderID;
+      } else if (currentPID !== "0") {
+        actingBotID = currentPID;
+      }
+
+      if (actingBotID && actingBotID !== "0") {
+        const botMove = getBotMove(state.G, actingBotID);
+        if (!botMove) return;
+
+        const targetBotClient = botClients[Number(actingBotID) - 1];
+        if (!targetBotClient) return;
+
+        isProcessing = true;
+        setTimeout(() => {
+          isProcessing = false;
+          const currentState = targetBotClient.getState();
+          if (!currentState || currentState.ctx.gameover) return;
+
+          switch (botMove.type) {
+            case "playCard":
+              targetBotClient.moves.playCard(botMove.cardId);
+              break;
+            case "callEnvido":
+              targetBotClient.moves.callEnvido(botMove.callType);
+              break;
+            case "respondEnvido":
+              targetBotClient.moves.respondEnvido({
+                accept: botMove.accept,
+                raiseType: botMove.raiseType,
+              });
+              break;
+            case "callTruco":
+              targetBotClient.moves.callTruco(botMove.callType);
+              break;
+            case "respondTruco":
+              targetBotClient.moves.respondTruco(botMove.accept);
+              break;
+            case "irseAlMazo":
+              targetBotClient.moves.irseAlMazo();
+              break;
+          }
+        }, 1000);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      botClients.forEach((c) => c.stop());
+    };
+  }, [updateStats]);
+
+  return <Local2v2TrucoClient matchID="ai-2v2-match" playerID="0" />;
+}
+
+type GameMode = "ai-1v1" | "ai-2v2" | "local" | "online" | null;
 
 function MainApp() {
   const { profile } = useAuth();
@@ -125,7 +233,7 @@ function MainApp() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
 
-  if (mode === "ai") {
+  if (mode === "ai-1v1") {
     return (
       <div>
         <div style={{ position: "fixed", top: 12, right: 12, zIndex: 1000 }}>
@@ -138,6 +246,19 @@ function MainApp() {
     );
   }
 
+  if (mode === "ai-2v2") {
+    return (
+      <div>
+        <div style={{ position: "fixed", top: 12, right: 12, zIndex: 1000 }}>
+          <button onClick={() => setMode(null)} style={leaveBtnStyle}>
+            {t("app.leave")}
+          </button>
+        </div>
+        <Ai2v2GameContainer />
+      </div>
+    );
+  }
+
   if (mode === "local") {
     return (
       <div>
@@ -146,7 +267,7 @@ function MainApp() {
             {t("app.leave")}
           </button>
         </div>
-        <LocalTrucoClient matchID="local-match" playerID={playerID} />
+        <Local2v2TrucoClient matchID="local-match" playerID={playerID} />
       </div>
     );
   }
@@ -195,7 +316,6 @@ function MainApp() {
           border: "1px solid rgba(255, 255, 255, 0.1)",
         }}
       >
-        {/* Language Selector Dropdown */}
         <select
           value={language}
           onChange={(e) => setLanguage(e.target.value)}
@@ -269,7 +389,7 @@ function MainApp() {
       <div
         style={{
           width: "100%",
-          maxWidth: "460px",
+          maxWidth: "480px",
           background: "rgba(30, 41, 59, 0.7)",
           backdropFilter: "blur(12px)",
           border: "1px solid rgba(255, 255, 255, 0.1)",
@@ -282,47 +402,64 @@ function MainApp() {
         <h1 style={{ margin: "0 0 8px 0", fontSize: "2rem", color: "#f59e0b" }}>
           {t("app.title")}
         </h1>
-        <p style={{ margin: "0 0 28px 0", color: "#94a3b8", fontSize: "0.95rem" }}>
+        <p style={{ margin: "0 0 24px 0", color: "#94a3b8", fontSize: "0.95rem" }}>
           {t("app.subtitle")}
         </p>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          {/* Play Against AI */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+          {/* 1v1 AI Mode */}
           <button
-            onClick={() => setMode("ai")}
+            onClick={() => setMode("ai-1v1")}
             style={{
-              padding: "16px 24px",
+              padding: "14px 20px",
               background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
               color: "#ffffff",
               border: "none",
               borderRadius: "14px",
               fontWeight: "bold",
-              fontSize: "1.05rem",
+              fontSize: "1rem",
               cursor: "pointer",
               boxShadow: "0 4px 14px rgba(37, 99, 235, 0.4)",
-              transition: "transform 0.15s ease",
             }}
           >
-            {t("mode.ai")}
+            🤖 1v1 vs AI (Single Player)
           </button>
 
-          {/* Local 2-Player */}
+          {/* 2v2 AI Mode (4 Players) */}
+          <button
+            onClick={() => setMode("ai-2v2")}
+            style={{
+              padding: "14px 20px",
+              background: "linear-gradient(135deg, #d97706 0%, #b45309 100%)",
+              color: "#ffffff",
+              border: "none",
+              borderRadius: "14px",
+              fontWeight: "bold",
+              fontSize: "1rem",
+              cursor: "pointer",
+              boxShadow: "0 4px 14px rgba(217, 119, 6, 0.4)",
+            }}
+          >
+            👥 2v2 vs AI (4 Players - Partners)
+          </button>
+
+          {/* Local 4-Player Pass & Play */}
           <div
             style={{
               background: "rgba(255,255,255,0.03)",
               border: "1px solid rgba(255,255,255,0.08)",
               borderRadius: "14px",
-              padding: "16px",
+              padding: "14px",
               display: "flex",
               flexDirection: "column",
-              gap: "10px",
+              gap: "8px",
             }}
           >
-            <div style={{ fontWeight: 600, fontSize: "0.95rem", color: "#e2e8f0" }}>
-              {t("mode.local")}
+            <div style={{ fontWeight: 600, fontSize: "0.9rem", color: "#e2e8f0" }}>
+              👥 Local 2v2 (Pass & Play 4 Seats)
             </div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
-              <span style={{ fontSize: "0.85rem", color: "#94a3b8" }}>{t("mode.select_seat")}</span>
+              <span style={{ fontSize: "0.8rem", color: "#94a3b8" }}>Seat:</span>
               <select
                 value={playerID}
                 onChange={(e) => setPlayerID(e.target.value)}
@@ -332,25 +469,29 @@ function MainApp() {
                   background: "#0f172a",
                   color: "#f8fafc",
                   border: "1px solid rgba(255,255,255,0.2)",
+                  fontSize: "0.8rem",
                 }}
               >
-                <option value="0">Player 0</option>
-                <option value="1">Player 1</option>
+                <option value="0">P0 (Team 0)</option>
+                <option value="1">P1 (Team 1)</option>
+                <option value="2">P2 (Team 0)</option>
+                <option value="3">P3 (Team 1)</option>
               </select>
             </div>
             <button
               onClick={() => setMode("local")}
               style={{
-                padding: "10px 18px",
+                padding: "8px 14px",
                 background: "#059669",
                 color: "#ffffff",
                 border: "none",
                 borderRadius: "8px",
                 fontWeight: "bold",
                 cursor: "pointer",
+                fontSize: "0.85rem",
               }}
             >
-              {t("mode.start_local")}
+              Start 2v2 Local Match
             </button>
           </div>
 
@@ -360,44 +501,45 @@ function MainApp() {
               background: "rgba(255,255,255,0.03)",
               border: "1px solid rgba(255,255,255,0.08)",
               borderRadius: "14px",
-              padding: "16px",
+              padding: "14px",
               display: "flex",
               flexDirection: "column",
-              gap: "10px",
+              gap: "8px",
             }}
           >
-            <div style={{ fontWeight: 600, fontSize: "0.95rem", color: "#e2e8f0" }}>
-              {t("mode.online")}
+            <div style={{ fontWeight: 600, fontSize: "0.9rem", color: "#e2e8f0" }}>
+              🌐 Online Server Match (1v1 / 2v2)
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px", alignItems: "center" }}>
-              <input
-                value={matchID}
-                onChange={(e) => setMatchID(e.target.value)}
-                placeholder={t("mode.match_id")}
-                style={{
-                  padding: "6px 12px",
-                  borderRadius: "6px",
-                  background: "#0f172a",
-                  color: "#f8fafc",
-                  border: "1px solid rgba(255,255,255,0.2)",
-                  width: "80%",
-                  textAlign: "center",
-                }}
-              />
-            </div>
+            <input
+              value={matchID}
+              onChange={(e) => setMatchID(e.target.value)}
+              placeholder="Match ID"
+              style={{
+                padding: "6px 12px",
+                borderRadius: "6px",
+                background: "#0f172a",
+                color: "#f8fafc",
+                border: "1px solid rgba(255,255,255,0.2)",
+                width: "80%",
+                textAlign: "center",
+                fontSize: "0.8rem",
+                margin: "0 auto",
+              }}
+            />
             <button
               onClick={() => setMode("online")}
               style={{
-                padding: "10px 18px",
+                padding: "8px 14px",
                 background: "#d97706",
                 color: "#ffffff",
                 border: "none",
                 borderRadius: "8px",
                 fontWeight: "bold",
                 cursor: "pointer",
+                fontSize: "0.85rem",
               }}
             >
-              {t("mode.connect_server")}
+              Connect to Server
             </button>
           </div>
         </div>
@@ -408,7 +550,6 @@ function MainApp() {
     </div>
   );
 }
-
 
 export function App() {
   return (
