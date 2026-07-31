@@ -344,8 +344,7 @@ export const TrucoGame: Game<TrucoGameState> = {
             G.winner = winningTeam;
             G.handOver = true;
           } else {
-            resetForNextHand(G);
-            events.endTurn({ next: G.manoID });
+            G.handOver = true;
             return;
           }
         } else {
@@ -379,8 +378,7 @@ export const TrucoGame: Game<TrucoGameState> = {
             G.winner = winningTeam;
             G.handOver = true;
           } else {
-            resetForNextHand(G);
-            events.endTurn({ next: G.manoID });
+            G.handOver = true;
             return;
           }
         } else {
@@ -588,9 +586,9 @@ export const TrucoGame: Game<TrucoGameState> = {
 
         if (G.scores[callerTeam] >= WINNING_SCORE) {
           G.winner = callerTeam;
+          G.handOver = true;
         } else {
-          resetForNextHand(G);
-          events.endTurn({ next: G.manoID });
+          G.handOver = true;
           return;
         }
       } else {
@@ -631,7 +629,14 @@ export const TrucoGame: Game<TrucoGameState> = {
 
       if (G.scores[opponentTeam] >= WINNING_SCORE) {
         G.winner = opponentTeam;
+        G.handOver = true;
       } else {
+        G.handOver = true;
+      }
+    },
+
+    nextHand: ({ G, events }) => {
+      if (G.handOver && !G.winner) {
         resetForNextHand(G);
         events.endTurn({ next: G.manoID });
       }

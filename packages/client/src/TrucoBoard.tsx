@@ -76,8 +76,30 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
 
   const canPlayCards = isMyTurn && !envidoPending && !trucoPending && !isGameOver;
 
-  // Dynamic Active Turn Mat Customization
   const activePlayerID = ctx.currentPlayer;
+
+  const [handDelayCountdown, setHandDelayCountdown] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (G.handOver && !G.winner) {
+      setHandDelayCountdown(3);
+      const interval = setInterval(() => {
+        setHandDelayCountdown((prev) => (prev !== null && prev > 1 ? prev - 1 : 0));
+      }, 1000);
+
+      const timeout = setTimeout(() => {
+        if (moves?.nextHand) moves.nextHand();
+        setHandDelayCountdown(null);
+      }, 3000);
+
+      return () => {
+        clearInterval(interval);
+        clearTimeout(timeout);
+      };
+    } else {
+      setHandDelayCountdown(null);
+    }
+  }, [G.handOver, G.handNumber, G.winner]);
 
   const player0MatUrl = profile?.custom_mat_url || PRESET_MATS[0].url;
   const player0MatOpacity = profile?.mat_opacity ?? 0.85;
@@ -171,8 +193,73 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
         </div>
       </header>
 
+      {/* 3-Second Hand Finalized Overlay Banner */}
+      {G.handOver && !G.winner && (
+        <div
+          style={{
+            position: "fixed",
+            top: "40%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            zIndex: 2000,
+            background: "rgba(15, 23, 42, 0.95)",
+            backdropFilter: "blur(20px)",
+            border: "2px solid #f59e0b",
+            borderRadius: "24px",
+            padding: "24px 36px",
+            textAlign: "center",
+            boxShadow: "0 24px 60px rgba(0,0,0,0.8)",
+            color: "#ffffff",
+            minWidth: "340px",
+          }}
+        >
+          <div style={{ fontSize: "1.3rem", fontWeight: "bold", color: "#f59e0b", marginBottom: "8px" }}>
+            🏁 Hand #{G.handNumber} Finalized!
+          </div>
+          <div style={{ fontSize: "0.95rem", color: "#e2e8f0", marginBottom: "16px" }}>
+            {G.activeNotice?.title || "Hand Concluded"} — {G.activeNotice?.message || "Preparing next hand..."}
+          </div>
+
+          {/* 3-Second Countdown Progress Bar */}
+          <div style={{ width: "100%", height: "8px", background: "rgba(255,255,255,0.1)", borderRadius: "4px", overflow: "hidden", marginBottom: "16px" }}>
+            <div
+              style={{
+                height: "100%",
+                width: `${((handDelayCountdown ?? 3) / 3) * 100}%`,
+                background: "linear-gradient(90deg, #f59e0b, #3b82f6)",
+                transition: "width 1s linear",
+              }}
+            />
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontSize: "0.85rem", color: "#94a3b8", fontWeight: "bold" }}>
+              ⏳ Next hand in {handDelayCountdown ?? 3}s...
+            </span>
+            <button
+              onClick={() => {
+                if (moves?.nextHand) moves.nextHand();
+                setHandDelayCountdown(null);
+              }}
+              style={{
+                padding: "8px 16px",
+                background: "#2563eb",
+                color: "#ffffff",
+                border: "none",
+                borderRadius: "10px",
+                fontWeight: "bold",
+                fontSize: "0.85rem",
+                cursor: "pointer",
+              }}
+            >
+              Next Hand Now ⏩
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Floating Active Event Notice (Atorado, Fold, Showdown) */}
-      {G.activeNotice && (
+      {G.activeNotice && !G.handOver && (
         <div
           key={G.activeNotice.id}
           style={{
