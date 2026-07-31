@@ -74,6 +74,12 @@ export function getHandPhase(tricksCount: number): HandPhase {
   return "TERCERA";
 }
 
+export interface DisconnectRecord {
+  playerID: PlayerID;
+  disconnectedAt: number; // Date.now()
+  expiresAt: number; // Date.now() + 60000
+}
+
 export interface TrucoGameState {
   numPlayers: 2 | 4;
   deck: Card[];
@@ -93,6 +99,7 @@ export interface TrucoGameState {
   winner: string | null;
   logs: GameLogMessage[];
   handNumber: number;
+  disconnectedPlayers?: Record<PlayerID, DisconnectRecord | null>;
 }
 
 

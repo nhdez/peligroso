@@ -93,6 +93,30 @@ export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps
   const [handDelayCountdown, setHandDelayCountdown] = useState<number | null>(null);
 
   useEffect(() => {
+    if (moves?.reconnectPlayer) {
+      moves.reconnectPlayer();
+    }
+
+    const checkTimer = setInterval(() => {
+      if (moves?.checkForfeitTimeouts) {
+        moves.checkForfeitTimeouts();
+      }
+    }, 1000);
+
+    const handleUnload = () => {
+      if (moves?.reportDisconnection) {
+        moves.reportDisconnection(myID);
+      }
+    };
+    window.addEventListener("beforeunload", handleUnload);
+
+    return () => {
+      clearInterval(checkTimer);
+      window.removeEventListener("beforeunload", handleUnload);
+    };
+  }, [myID, moves]);
+
+  useEffect(() => {
     if (G.handOver && !G.winner) {
       setHandDelayCountdown(3);
       const interval = setInterval(() => {

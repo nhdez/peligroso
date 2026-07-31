@@ -38,6 +38,36 @@ function MainApp() {
   const [playerID, setPlayerID] = useState<string>("0");
   const [activeMatchID, setActiveMatchID] = useState<string>("demo-match");
 
+  const [activeSession, setActiveSession] = useState<{ matchID: string; playerID: string; mode: any } | null>(() => {
+    try {
+      const saved = localStorage.getItem("peligroso_active_session");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    if (mode !== "lobby") {
+      const session = { matchID: activeMatchID, playerID, mode, timestamp: Date.now() };
+      localStorage.setItem("peligroso_active_session", JSON.stringify(session));
+      setActiveSession(session);
+    }
+  }, [mode, activeMatchID, playerID]);
+
+  function handleRejoinMatch() {
+    if (activeSession) {
+      setActiveMatchID(activeSession.matchID);
+      setPlayerID(activeSession.playerID);
+      setMode(activeSession.mode);
+    }
+  }
+
+  function handleClearSession() {
+    localStorage.removeItem("peligroso_active_session");
+    setActiveSession(null);
+  }
+
   function handleStartRankedQueue() {
     setIsQueueing(true);
   }
@@ -53,9 +83,9 @@ function MainApp() {
     return (
       <div style={{ width: "100vw", height: "100vh", overflow: "hidden", background: "#020617" }}>
         {mode === "ranked-1v1" || mode === "ai-1v1" ? (
-          <PeligrosoClient1v1AI playerID={playerID} matchID={activeMatchID} onLeaveMatch={() => setMode("lobby")} />
+          <PeligrosoClient1v1AI playerID={playerID} matchID={activeMatchID} onLeaveMatch={() => { handleClearSession(); setMode("lobby"); }} />
         ) : (
-          <PeligrosoClient2v2AI playerID={playerID} matchID={activeMatchID} onLeaveMatch={() => setMode("lobby")} />
+          <PeligrosoClient2v2AI playerID={playerID} matchID={activeMatchID} onLeaveMatch={() => { handleClearSession(); setMode("lobby"); }} />
         )}
       </div>
     );
@@ -208,6 +238,72 @@ function MainApp() {
             setMode("ai-1v1");
           }}
         />
+      )}
+
+      {/* Active Session Reconnection Banner */}
+      {activeSession && mode === "lobby" && (
+        <div
+          style={{
+            width: "100%",
+            maxWidth: "1280px",
+            background: "linear-gradient(135deg, rgba(30, 58, 138, 0.95), rgba(30, 41, 59, 0.95))",
+            backdropFilter: "blur(16px)",
+            border: "2px solid #3b82f6",
+            borderRadius: "16px",
+            padding: "14px 24px",
+            marginBottom: "20px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            boxShadow: "0 10px 30px rgba(59, 130, 246, 0.3)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <span style={{ fontSize: "1.6rem" }}>⚡</span>
+            <div>
+              <div style={{ fontSize: "1rem", fontWeight: "bold", color: "#60a5fa" }}>
+                Active Match In Progress! (Match #{activeSession.matchID})
+              </div>
+              <div style={{ fontSize: "0.8rem", color: "#cbd5e1" }}>
+                You were disconnected or refreshed. Click rejoin below to return to your game.
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button
+              onClick={handleRejoinMatch}
+              style={{
+                padding: "8px 18px",
+                background: "#2563eb",
+                color: "#ffffff",
+                border: "none",
+                borderRadius: "10px",
+                fontWeight: "bold",
+                fontSize: "0.85rem",
+                cursor: "pointer",
+                boxShadow: "0 4px 12px rgba(37, 99, 235, 0.4)",
+              }}
+            >
+              ⚡ Rejoin Match Now
+            </button>
+            <button
+              onClick={handleClearSession}
+              style={{
+                padding: "8px 12px",
+                background: "rgba(239, 68, 68, 0.2)",
+                color: "#fca5a5",
+                border: "1px solid #ef4444",
+                borderRadius: "10px",
+                fontWeight: "bold",
+                fontSize: "0.85rem",
+                cursor: "pointer",
+              }}
+            >
+              Abandon Session ❌
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Main Lobby Dashboard: 3-Column Grid */}
