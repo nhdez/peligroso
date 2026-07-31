@@ -34,7 +34,7 @@ const SUIT_COLORS: Record<string, string> = {
   copa: "#831843",
 };
 
-export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameState>) {
+export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps<TrucoGameState> & { onLeaveMatch?: () => void }) {
   const { profile, decks } = useAuth();
   const { t } = useI18n();
   const [isDragging, setIsDragging] = useState(false);
@@ -996,7 +996,7 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
           matchID={ctx.matchID || "demo-match"}
           logs={G.logs}
           onVideoStreamChange={(stream) => setMyVideoStream(stream)}
-          onLeaveMatch={(props as any)?.onLeaveMatch}
+          onLeaveMatch={onLeaveMatch}
         />
       </div>
     </div>
