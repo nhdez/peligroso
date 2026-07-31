@@ -274,6 +274,7 @@ export const TrucoGame: Game<TrucoGameState> = {
   },
 
   turn: {
+    activePlayers: { all: "play" },
     order: {
       first: ({ G }) => {
         // Active call pending response?
@@ -319,6 +320,9 @@ export const TrucoGame: Game<TrucoGameState> = {
 
   moves: {
     playCard: ({ G, ctx, events, playerID }, cardId: string) => {
+      // Must be current player's turn to play a card
+      if (ctx.currentPlayer !== playerID) return;
+
       // Cannot play card if call pending response
       if (G.currentEnvidoCall?.accepted === null || G.currentTrucoCall?.accepted === null) {
         return;
@@ -427,7 +431,10 @@ export const TrucoGame: Game<TrucoGameState> = {
       }
     },
 
-    callEnvido: ({ G, events, playerID }, type: EnvidoCallType) => {
+    callEnvido: ({ G, ctx, events, playerID }, type: EnvidoCallType) => {
+      // Must be current player's turn to call Envido
+      if (ctx.currentPlayer !== playerID) return;
+
       // Must be in PRIMERA phase (trick 1) and Envido not yet resolved
       if (G.phase !== "PRIMERA" || G.envidoResolved) return;
 
@@ -577,7 +584,9 @@ export const TrucoGame: Game<TrucoGameState> = {
       events.endTurn();
     },
 
-    callTruco: ({ G, events, playerID }, type: TrucoCallType) => {
+    callTruco: ({ G, ctx, events, playerID }, type: TrucoCallType) => {
+      // Must be current player's turn or responder's turn to call/raise Truco
+      if (ctx.currentPlayer !== playerID) return;
       if (G.currentTrucoCall?.accepted === null) return; // Pending call already exists
 
       // Validate team ownership: team that initiated current Truco level cannot raise their own call

@@ -96,7 +96,7 @@ export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps
   const [handDelayCountdown, setHandDelayCountdown] = useState<number | null>(null);
 
   useEffect(() => {
-    if (moves?.reconnectPlayer) {
+    if (moves?.reconnectPlayer && G.disconnectedPlayers && G.disconnectedPlayers[myID]) {
       moves.reconnectPlayer();
     }
 
