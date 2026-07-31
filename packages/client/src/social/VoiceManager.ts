@@ -14,10 +14,54 @@ export class VoiceManager {
   private analyser: AnalyserNode | null = null;
   private animFrameId: number | null = null;
 
+  private peerAudioElements: Map<string, HTMLAudioElement> = new Map();
+  private spectatorMuteMap: Map<string, boolean> = new Map();
+  public muteAllSpectators: boolean = true;
+
   public isMicMuted: boolean = false;
   public isDeafened: boolean = false;
   public speakingLevel: number = 0;
   public onLevelUpdate?: (level: number) => void;
+
+  constructor(public matchID: string = "demo-match", public userID: string = "0") {}
+
+  // Mute or unmute specific spectator audio output for this player
+  setSpectatorMuted(spectatorId: string, isMuted: boolean) {
+    this.spectatorMuteMap.set(spectatorId, isMuted);
+    const audioEl = this.peerAudioElements.get(spectatorId);
+    if (audioEl) {
+      audioEl.muted = isMuted || this.muteAllSpectators;
+    }
+  }
+
+  // Toggle master mute for all spectators
+  setMuteAllSpectators(muteAll: boolean) {
+    this.muteAllSpectators = muteAll;
+    this.peerAudioElements.forEach((audioEl, id) => {
+      if (id.startsWith("spec-") || id.includes("spectator")) {
+        audioEl.muted = muteAll || (this.spectatorMuteMap.get(id) ?? true);
+      }
+    });
+  }
+
+  // Register remote audio track for a peer (Player or Spectator)
+  registerPeerAudioTrack(peerId: string, track: MediaStreamTrack, role: "player" | "spectator") {
+    const stream = new MediaStream([track]);
+    let audioEl = this.peerAudioElements.get(peerId);
+    if (!audioEl) {
+      audioEl = document.createElement("audio");
+      audioEl.autoplay = true;
+      audioEl.style.display = "none";
+      document.body.appendChild(audioEl);
+      this.peerAudioElements.set(peerId, audioEl);
+    }
+    audioEl.srcObject = stream;
+
+    if (role === "spectator") {
+      const isMuted = this.muteAllSpectators || (this.spectatorMuteMap.get(peerId) ?? true);
+      audioEl.muted = isMuted;
+    }
+  }
 
   async startMicrophone(): Promise<boolean> {
     try {
@@ -74,6 +118,9 @@ export class VoiceManager {
 
   toggleDeafen(): boolean {
     this.isDeafened = !this.isDeafened;
+    this.peerAudioElements.forEach((el) => {
+      el.muted = this.isDeafened;
+    });
     return this.isDeafened;
   }
 
@@ -85,5 +132,7 @@ export class VoiceManager {
     if (this.audioContext) {
       this.audioContext.close();
     }
+    this.peerAudioElements.forEach((el) => el.remove());
+    this.peerAudioElements.clear();
   }
 }

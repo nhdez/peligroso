@@ -82,33 +82,46 @@ export function SocialPanel({
   const [inputText, setInputText] = useState("");
   const chatEndRef = useRef<HTMLDivElement | null>(null);
 
-  // Fetch in-game chat messages from Supabase Postgres & subscribe to Realtime
   useEffect(() => {
-    if (isSupabaseConfigured && supabase && matchID) {
+    const vm = voiceManagerRef.current;
+    vm.onStateChange((states) => setVoiceParticipants(states));
+
+    const vidMgr = videoManagerRef.current;
+    vidMgr.onStreamChange((stream) => {
+      if (onVideoStreamChange) onVideoStreamChange(stream);
+    });
+
+    // Fetch persisted game chat messages from Supabase Postgres
+    if (isSupabaseConfigured && supabase) {
       supabase
         .from("game_chat_messages")
         .select("*")
         .eq("match_id", matchID)
         .order("created_at", { ascending: true })
-        .limit(50)
         .then(({ data, error }) => {
-          if (data && data.length > 0 && !error) {
-            const formatted: ChatMessage[] = data.map((row: any) => ({
-              id: row.id,
-              senderId: row.sender_id || "0",
-              senderName: row.username,
-              countryCode: row.country_code || "AR",
-              role: (row.role as "player" | "spectator") || "player",
-              text: row.content,
-              timestamp: new Date(row.created_at).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              }),
+          if (!error && data && data.length > 0) {
+            const mapped: ChatMessage[] = data.map((msg: any) => ({
+              id: msg.id,
+              senderId: msg.sender_id,
+              senderName: msg.username,
+              countryCode: msg.country_code || "AR",
+              role: msg.role || "player",
+              text: msg.content,
+              timestamp: new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
             }));
-            setChatMessages(formatted);
+            setChatMessages(mapped);
           }
         });
+    }
 
+    return () => {
+      vm.leave();
+      vidMgr.stopLocalStream();
+    };
+  }, [matchID, myID, onVideoStreamChange]);
+
+  useEffect(() => {
+    if (isSupabaseConfigured && supabase && matchID) {
       const channel = supabase
         .channel(`game_chat_${matchID}`)
         .on(
@@ -186,9 +199,24 @@ export function SocialPanel({
     setIsDeafened(deaf);
   }
 
+  const [muteAllSpectators, setMuteAllSpectators] = useState(true);
+
+  function handleToggleMasterSpectatorMute() {
+    const newMuteState = !muteAllSpectators;
+    setMuteAllSpectators(newMuteState);
+    voiceManagerRef.current.setMuteAllSpectators(newMuteState);
+  }
+
   function toggleSpectatorSpeak(id: string) {
     setSpectators((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, canSpeak: !s.canSpeak } : s))
+      prev.map((s) => {
+        if (s.id === id) {
+          const updatedCanSpeak = !s.canSpeak;
+          voiceManagerRef.current.setSpectatorMuted(id, !updatedCanSpeak);
+          return { ...s, canSpeak: updatedCanSpeak };
+        }
+        return s;
+      })
     );
   }
 
@@ -363,31 +391,55 @@ export function SocialPanel({
           </div>
         )}
 
-        {/* Spectators Voice Permission Controls */}
+        {/* Spectator Recognition & Voice Management */}
         <div style={{ marginTop: "10px", paddingTop: "8px", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-          <div style={{ fontSize: "0.7rem", color: "#94a3b8", marginBottom: "4px" }}>
-            Spectator Voice Access (Default Muted):
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+            <span style={{ fontSize: "0.75rem", fontWeight: "bold", color: "#f59e0b" }}>
+              👥 Spectator Audio Controls
+            </span>
+            <button
+              onClick={handleToggleMasterSpectatorMute}
+              style={{
+                padding: "3px 8px",
+                borderRadius: "6px",
+                border: "none",
+                background: muteAllSpectators ? "#dc2626" : "#059669",
+                color: "#ffffff",
+                fontSize: "0.68rem",
+                fontWeight: "bold",
+                cursor: "pointer",
+              }}
+            >
+              {muteAllSpectators ? "Mute Spectators: ON" : "Mute Spectators: OFF"}
+            </button>
           </div>
-          {spectators.map((s) => (
-            <div key={s.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.75rem" }}>
-              <span style={{ color: "#cbd5e1" }}>👥 {s.name}</span>
-              <button
-                onClick={() => toggleSpectatorSpeak(s.id)}
-                style={{
-                  padding: "3px 8px",
-                  borderRadius: "6px",
-                  border: "none",
-                  background: s.canSpeak ? "#059669" : "#475569",
-                  color: "#ffffff",
-                  fontSize: "0.7rem",
-                  fontWeight: "bold",
-                  cursor: "pointer",
-                }}
-              >
-                {s.canSpeak ? "🎙️ Allowed" : "🔇 Muted"}
-              </button>
-            </div>
-          ))}
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+            {spectators.map((s) => (
+              <div key={s.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.75rem", background: "rgba(0,0,0,0.25)", padding: "4px 8px", borderRadius: "6px" }}>
+                <span style={{ color: "#cbd5e1", display: "flex", alignItems: "center", gap: "4px" }}>
+                  <span>👥</span> {s.name} <span style={{ fontSize: "0.65rem", color: "#94a3b8" }}>(Spectator)</span>
+                </span>
+                <button
+                  onClick={() => toggleSpectatorSpeak(s.id)}
+                  disabled={muteAllSpectators}
+                  style={{
+                    padding: "2px 6px",
+                    borderRadius: "4px",
+                    border: "none",
+                    background: muteAllSpectators ? "#475569" : s.canSpeak ? "#059669" : "#dc2626",
+                    color: "#ffffff",
+                    fontSize: "0.65rem",
+                    fontWeight: "bold",
+                    cursor: muteAllSpectators ? "not-allowed" : "pointer",
+                    opacity: muteAllSpectators ? 0.6 : 1,
+                  }}
+                >
+                  {muteAllSpectators ? "Muted" : s.canSpeak ? "Audio On" : "Audio Muted"}
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
