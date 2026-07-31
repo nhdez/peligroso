@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import type { BoardProps } from "boardgame.io/react";
 import {
   TrucoGameState,

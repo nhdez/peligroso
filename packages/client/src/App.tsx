@@ -7,8 +7,9 @@ import { AdminPanel } from "./AdminPanel.js";
 import { LobbyChat } from "./LobbyChat.js";
 import { Leaderboard } from "./Leaderboard.js";
 import { MatchmakingQueue } from "./MatchmakingQueue.js";
-import { useAuth, getCountryFlag } from "./AuthContext.js";
-import { useI18n } from "./i18n/I18nContext.js";
+import { AuthProvider, useAuth, getCountryFlag } from "./AuthContext.js";
+import { I18nProvider, useI18n } from "./i18n/I18nContext.js";
+import { StorageProvider } from "./storage/StorageContext.js";
 
 // boardgame.io Client wrappers
 const PeligrosoClient1v1AI = Client({
@@ -25,7 +26,7 @@ const PeligrosoClient2v2AI = Client({
   debug: false,
 });
 
-export function App() {
+function MainApp() {
   const { profile } = useAuth();
   const { t, language, setLanguage, availableLanguages } = useI18n();
 
@@ -418,5 +419,17 @@ export function App() {
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
       <AdminPanel isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
     </div>
+  );
+}
+
+export function App() {
+  return (
+    <StorageProvider>
+      <I18nProvider>
+        <AuthProvider>
+          <MainApp />
+        </AuthProvider>
+      </I18nProvider>
+    </StorageProvider>
   );
 }
