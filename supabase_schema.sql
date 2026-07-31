@@ -1,0 +1,94 @@
+-- ============================================================================
+-- TRUCO ARGENTINO - SUPABASE DATABASE SCHEMA & RLS MIGRATION
+-- ============================================================================
+
+-- 1. Create Profiles Table (Linked to Supabase Auth)
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  username TEXT UNIQUE NOT NULL,
+  role TEXT NOT NULL DEFAULT 'player' CHECK (role IN ('admin', 'player')),
+  elo_rating INTEGER NOT NULL DEFAULT 1200,
+  matches_played INTEGER NOT NULL DEFAULT 0,
+  matches_won INTEGER NOT NULL DEFAULT 0,
+  is_banned BOOLEAN NOT NULL DEFAULT FALSE,
+  selected_deck_id TEXT NOT NULL DEFAULT 'classic-spanish',
+  custom_mat_url TEXT DEFAULT '',
+  mat_opacity REAL DEFAULT 0.85,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 2. Create Deck Themes Table
+CREATE TABLE IF NOT EXISTS public.deck_themes (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT NOT NULL,
+  card_back_url TEXT NOT NULL,
+  created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 3. Enable Row Level Security (RLS)
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.deck_themes ENABLE ROW LEVEL SECURITY;
+
+-- 4. RLS Policies for Profiles Table
+-- Allow anyone (public/authenticated) to read user profiles for leaderboards
+CREATE POLICY "Allow public read access for profiles"
+  ON public.profiles FOR SELECT
+  USING (true);
+
+-- Allow users to update their own profile data (or admins to manage profiles)
+CREATE POLICY "Allow users to update their own profile"
+  ON public.profiles FOR UPDATE
+  USING (
+    auth.uid() = id OR 
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+  );
+
+-- 5. RLS Policies for Deck Themes Table
+-- Allow anyone to view available card decks
+CREATE POLICY "Allow public read access for deck_themes"
+  ON public.deck_themes FOR SELECT
+  USING (true);
+
+-- Allow admins to insert or delete deck themes
+CREATE POLICY "Allow admins to create deck themes"
+  ON public.deck_themes FOR INSERT
+  WITH CHECK (
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+  );
+
+CREATE POLICY "Allow admins to delete deck themes"
+  ON public.deck_themes FOR DELETE
+  USING (
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+  );
+
+-- 6. Trigger to Automatically Provision Profile on User Sign-Up
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, username, role, elo_rating)
+  VALUES (
+    NEW.id,
+    COALESCE(NEW.raw_user_meta_data->>'username', split_part(NEW.email, '@', 1), 'Player_' || substr(NEW.id::text, 1, 6)),
+    'player',
+    1200
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Bind Trigger to auth.users
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- 7. Insert Seed Data for Default Card Decks
+INSERT INTO public.deck_themes (id, name, description, card_back_url)
+VALUES
+  ('classic-spanish', 'Clásico Español', 'Mazo tradicional de cartas españolas', 'linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%)'),
+  ('gold-royal', 'Royal Gold 24K', 'Mazo dorado con acabados reales', 'linear-gradient(135deg, #b45309 0%, #78350f 100%)'),
+  ('cyber-neon', 'Cyberpunk Neon', 'Mazo futurista con efectos de neón', 'linear-gradient(135deg, #701a75 0%, #4c1d95 100%)')
+ON CONFLICT (id) DO NOTHING;
