@@ -101,7 +101,7 @@ export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps
     }
 
     const checkTimer = setInterval(() => {
-      if (moves?.checkForfeitTimeouts) {
+      if (moves?.checkForfeitTimeouts && G.disconnectedPlayers && Object.values(G.disconnectedPlayers).some(Boolean)) {
         moves.checkForfeitTimeouts();
       }
     }, 1000);
@@ -117,7 +117,7 @@ export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps
       clearInterval(checkTimer);
       window.removeEventListener("beforeunload", handleUnload);
     };
-  }, [myID, moves]);
+  }, [myID, moves, G.disconnectedPlayers]);
 
   useEffect(() => {
     if (G.handOver && !G.winner) {
@@ -127,7 +127,9 @@ export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps
       }, 1000);
 
       const timeout = setTimeout(() => {
-        if (moves?.nextHand) moves.nextHand();
+        if (moves?.nextHand) {
+          moves.nextHand();
+        }
         setHandDelayCountdown(null);
       }, 3000);
 
@@ -138,7 +140,7 @@ export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps
     } else {
       setHandDelayCountdown(null);
     }
-  }, [G.handOver, G.handNumber, G.winner]);
+  }, [G.handOver, G.handNumber, G.winner, moves]);
 
   const player0MatUrl = profile?.custom_mat_url || PRESET_MATS[0].url;
   const player0MatOpacity = profile?.mat_opacity ?? 0.85;

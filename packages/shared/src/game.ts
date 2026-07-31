@@ -680,79 +680,97 @@ export const TrucoGame: Game<TrucoGameState> = {
       }
     },
 
-    nextHand: ({ G, events }) => {
-      if (G.handOver && !G.winner) {
-        resetForNextHand(G);
-        events.endTurn({ next: G.manoID });
-      }
+    nextHand: {
+      move: ({ G, events }) => {
+        if (G.handOver && !G.winner) {
+          resetForNextHand(G);
+          events.endTurn({ next: G.manoID });
+        }
+      },
+      noLimit: true,
     },
 
-    reorderHand: ({ G, playerID }, { fromIndex, toIndex }: { fromIndex: number; toIndex: number }) => {
-      const hand = G.hands[playerID!];
-      if (!hand || fromIndex < 0 || fromIndex >= hand.length || toIndex < 0 || toIndex >= hand.length) return;
-      if (fromIndex === toIndex) return;
-      const [movedCard] = hand.splice(fromIndex, 1);
-      hand.splice(toIndex, 0, movedCard);
-      addLog(G, `Player ${playerID} shuffled their hand cards.`);
+    reorderHand: {
+      move: ({ G, playerID }, { fromIndex, toIndex }: { fromIndex: number; toIndex: number }) => {
+        const hand = G.hands[playerID!];
+        if (!hand || fromIndex < 0 || fromIndex >= hand.length || toIndex < 0 || toIndex >= hand.length) return;
+        if (fromIndex === toIndex) return;
+        const [movedCard] = hand.splice(fromIndex, 1);
+        hand.splice(toIndex, 0, movedCard);
+        addLog(G, `Player ${playerID} shuffled their hand cards.`);
+      },
+      noLimit: true,
     },
 
-    reportDisconnection: ({ G }, targetPlayerID: string) => {
-      if (!G.disconnectedPlayers) G.disconnectedPlayers = {};
-      const now = Date.now();
-      G.disconnectedPlayers[targetPlayerID] = {
-        playerID: targetPlayerID,
-        disconnectedAt: now,
-        expiresAt: now + 60000,
-      };
-      addLog(G, `⚠️ Player ${targetPlayerID} disconnected. 60s reconnection window active.`);
-      G.activeNotice = {
-        id: `${now}-${Math.random()}`,
-        title: `⚠️ PLAYER ${targetPlayerID} DISCONNECTED`,
-        message: `Player ${targetPlayerID} disconnected. Waiting 60s for reconnection before forfeit...`,
-        type: "atorado",
-      };
-    },
-
-    reconnectPlayer: ({ G, playerID }) => {
-      if (G.disconnectedPlayers && G.disconnectedPlayers[playerID!]) {
-        G.disconnectedPlayers[playerID!] = null;
-        addLog(G, `⚡ Player ${playerID} reconnected to the match!`);
-        G.activeNotice = {
-          id: `${Date.now()}-${Math.random()}`,
-          title: `⚡ PLAYER ${playerID} RECONNECTED`,
-          message: `Player ${playerID} rejoined the game!`,
-          type: "envido",
+    reportDisconnection: {
+      move: ({ G }, targetPlayerID: string) => {
+        if (!G.disconnectedPlayers) G.disconnectedPlayers = {};
+        const now = Date.now();
+        G.disconnectedPlayers[targetPlayerID] = {
+          playerID: targetPlayerID,
+          disconnectedAt: now,
+          expiresAt: now + 60000,
         };
-      }
+        addLog(G, `⚠️ Player ${targetPlayerID} disconnected. 60s reconnection window active.`);
+        G.activeNotice = {
+          id: `${now}-${Math.random()}`,
+          title: `⚠️ PLAYER ${targetPlayerID} DISCONNECTED`,
+          message: `Player ${targetPlayerID} disconnected. Waiting 60s for reconnection before forfeit...`,
+          type: "atorado",
+        };
+      },
+      noLimit: true,
     },
 
-    checkForfeitTimeouts: ({ G }) => {
-      if (!G.disconnectedPlayers || G.winner !== null) return;
-      const now = Date.now();
-      Object.keys(G.disconnectedPlayers).forEach((pID) => {
-        const record = G.disconnectedPlayers![pID];
-        if (record && now >= record.expiresAt) {
-          const dcTeam = teamOf(pID, G.numPlayers);
-          const remainingTeam = dcTeam === "0" ? "1" : "0";
-          G.winner = remainingTeam;
-          G.scores[remainingTeam] = WINNING_SCORE;
-          G.handOver = true;
-          G.disconnectedPlayers![pID] = null;
-          addLog(G, `🏆 Match forfeited: Player ${pID} failed to reconnect in 60s. Team ${remainingTeam} awarded victory!`);
+    reconnectPlayer: {
+      move: ({ G, playerID }) => {
+        if (G.disconnectedPlayers && G.disconnectedPlayers[playerID!]) {
+          G.disconnectedPlayers[playerID!] = null;
+          addLog(G, `⚡ Player ${playerID} reconnected to the match!`);
           G.activeNotice = {
-            id: `${now}-${Math.random()}`,
-            title: `🏆 VICTORY BY FORFEIT`,
-            message: `Player ${pID} failed to reconnect within 60 seconds. Team ${remainingTeam} wins!`,
-            type: "hand_win",
+            id: `${Date.now()}-${Math.random()}`,
+            title: `⚡ PLAYER ${playerID} RECONNECTED`,
+            message: `Player ${playerID} rejoined the game!`,
+            type: "envido",
           };
         }
-      });
+      },
+      noLimit: true,
     },
 
-    completeSuerteDeReyes: ({ G }) => {
-      if (G.suerteDeReyes) {
-        G.suerteDeReyes.active = false;
-      }
+    checkForfeitTimeouts: {
+      move: ({ G }) => {
+        if (!G.disconnectedPlayers || G.winner !== null) return;
+        const now = Date.now();
+        Object.keys(G.disconnectedPlayers).forEach((pID) => {
+          const record = G.disconnectedPlayers![pID];
+          if (record && now >= record.expiresAt) {
+            const dcTeam = teamOf(pID, G.numPlayers);
+            const remainingTeam = dcTeam === "0" ? "1" : "0";
+            G.winner = remainingTeam;
+            G.scores[remainingTeam] = WINNING_SCORE;
+            G.handOver = true;
+            G.disconnectedPlayers![pID] = null;
+            addLog(G, `🏆 Match forfeited: Player ${pID} failed to reconnect in 60s. Team ${remainingTeam} awarded victory!`);
+            G.activeNotice = {
+              id: `${now}-${Math.random()}`,
+              title: `🏆 VICTORY BY FORFEIT`,
+              message: `Player ${pID} failed to reconnect within 60 seconds. Team ${remainingTeam} wins!`,
+              type: "hand_win",
+            };
+          }
+        });
+      },
+      noLimit: true,
+    },
+
+    completeSuerteDeReyes: {
+      move: ({ G }) => {
+        if (G.suerteDeReyes) {
+          G.suerteDeReyes.active = false;
+        }
+      },
+      noLimit: true,
     },
   },
 
