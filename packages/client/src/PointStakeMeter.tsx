@@ -56,11 +56,11 @@ export function PointStakeMeter({ G }: { G: TrucoGameState }) {
         background: "rgba(15, 23, 42, 0.85)",
         backdropFilter: "blur(12px)",
         borderRadius: "16px",
-        border: isCallActive ? "1px solid #f59e0b" : "1px solid rgba(255, 255, 255, 0.1)",
-        boxShadow: isCallActive ? "0 8px 24px rgba(245, 158, 11, 0.25)" : "none",
-        padding: "12px 18px",
+        border: "1px solid rgba(255, 255, 255, 0.15)",
+        boxShadow: "0 8px 32px rgba(0, 0, 0, 0.5)",
+        padding: "10px 16px",
         boxSizing: "border-box",
-        margin: "32px auto 12px auto",
+        margin: "12px auto 8px auto",
         transition: "all 0.3s ease",
       }}
     >

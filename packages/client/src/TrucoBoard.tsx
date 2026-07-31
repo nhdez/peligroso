@@ -430,6 +430,62 @@ export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps
             overflow: "hidden",
           }}
         >
+          {/* Dedicated Top Info & Arena Header Strip */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              background: "rgba(15, 23, 42, 0.85)",
+              backdropFilter: "blur(10px)",
+              padding: "6px 16px",
+              borderRadius: "12px",
+              border: "1px solid rgba(255, 255, 255, 0.12)",
+              fontSize: "0.75rem",
+              color: "#f59e0b",
+              flexShrink: 0,
+              gap: "10px",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: "bold" }}>
+              <span>🏟️</span> {t("table.arena", { name: activeMatOwnerName })} | 🎴 {activeDeckTheme.name}
+            </div>
+
+            {/* Subtle Compact Event Notice (Envido Showdown, Fold, Atorado) */}
+            {G.activeNotice && !G.handOver && (
+              <div
+                key={G.activeNotice.id}
+                style={{
+                  background:
+                    G.activeNotice.type === "atorado"
+                      ? "rgba(245, 158, 11, 0.2)"
+                      : G.activeNotice.type === "mazo"
+                      ? "rgba(239, 68, 68, 0.2)"
+                      : "rgba(59, 130, 246, 0.2)",
+                  border:
+                    G.activeNotice.type === "atorado"
+                      ? "1px solid #f59e0b"
+                      : G.activeNotice.type === "mazo"
+                      ? "1px solid #ef4444"
+                      : "1px solid #3b82f6",
+                  padding: "3px 10px",
+                  borderRadius: "8px",
+                  fontSize: "0.72rem",
+                  color: "#ffffff",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  animation: "fadeIn 0.2s ease-out",
+                }}
+              >
+                <strong style={{ color: G.activeNotice.type === "atorado" ? "#f59e0b" : G.activeNotice.type === "mazo" ? "#f87171" : "#60a5fa" }}>
+                  {G.activeNotice.title}:
+                </strong>
+                <span>{G.activeNotice.message}</span>
+              </div>
+            )}
+          </div>
+
           {/* Top Arena Mat Zone */}
           <div
             style={{
@@ -489,77 +545,6 @@ export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps
               isCurrentTurn={ctx.currentPlayer === opponentID}
             />
           </div>
-
-          {/* Top-Center: Active Battleground Mat Badge */}
-          <div
-            style={{
-              position: "absolute",
-              top: "12px",
-              left: "50%",
-              transform: "translateX(-50%)",
-              zIndex: 2,
-              background: "rgba(15, 23, 42, 0.8)",
-              backdropFilter: "blur(6px)",
-              padding: "4px 12px",
-              borderRadius: "10px",
-              fontSize: "0.75rem",
-              color: "#f59e0b",
-              border: "1px solid rgba(255, 255, 255, 0.15)",
-              pointerEvents: "none",
-            }}
-          >
-            {t("table.arena", { name: activeMatOwnerName })} | 🎴 Deck: {activeDeckTheme.name}
-          </div>
-
-          {/* Subtle Compact Floating Event Notice (Envido Showdown, Fold, Atorado) */}
-          {G.activeNotice && !G.handOver && (
-            <div
-              key={G.activeNotice.id}
-              style={{
-                position: "absolute",
-                top: "46px",
-                left: "50%",
-                transform: "translateX(-50%)",
-                zIndex: 10,
-                background: "rgba(15, 23, 42, 0.88)",
-                backdropFilter: "blur(10px)",
-                border:
-                  G.activeNotice.type === "atorado"
-                    ? "1px solid #f59e0b"
-                    : G.activeNotice.type === "mazo"
-                    ? "1px solid #ef4444"
-                    : "1px solid #3b82f6",
-                borderRadius: "12px",
-                padding: "5px 14px",
-                textAlign: "center",
-                color: "#ffffff",
-                boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
-                pointerEvents: "none",
-                maxWidth: "440px",
-                width: "max-content",
-                animation: "fadeIn 0.2s ease-out",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: "0.75rem",
-                  fontWeight: "bold",
-                  color:
-                    G.activeNotice.type === "atorado"
-                      ? "#f59e0b"
-                      : G.activeNotice.type === "mazo"
-                      ? "#f87171"
-                      : "#60a5fa",
-                }}
-              >
-                {G.activeNotice.title}
-              </div>
-              <div style={{ fontSize: "0.7rem", color: "#cbd5e1", marginTop: "1px" }}>
-                {G.activeNotice.message}
-              </div>
-            </div>
-          )}
-
 
           {/* Table Content Wrapper */}
           <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", height: "100%", justifyContent: "space-between" }}>
@@ -939,7 +924,7 @@ export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps
                     justifyContent: "center",
                     alignItems: "flex-end",
                     position: "relative",
-                    minHeight: "125px",
+                    minHeight: "185px",
                     padding: "0 20px",
                   }}
                 >
@@ -993,19 +978,19 @@ export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps
                         onMouseLeave={() => setHoveredCardId(null)}
                         style={{
                           cursor: canPlayCards ? "grab" : "pointer",
-                          margin: total > 1 ? "0 -10px" : "0 4px",
+                          margin: total > 1 ? "0 -12px" : "0 4px",
                           transform: isHovered
-                            ? "translateY(-26px) scale(1.18) rotate(0deg)"
+                            ? "translateY(-32px) scale(1.22) rotate(0deg)"
                             : `translateY(${translateY}px) rotate(${angle}deg)`,
                           zIndex: isHovered ? 50 : idx + 1,
                           transition: "all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1)",
                           boxShadow: isHovered
                             ? "0 16px 36px rgba(245, 158, 11, 0.5), 0 0 20px rgba(59, 130, 246, 0.5)"
                             : "0 6px 14px rgba(0,0,0,0.4)",
-                          borderRadius: "10px",
+                          borderRadius: "12px",
                         }}
                       >
-                        <RenderCard card={card} isPlayable={canPlayCards} cardFaces={activeDeckTheme?.cardFaces} width={90} height={135} />
+                        <RenderCard card={card} isPlayable={canPlayCards} cardFaces={activeDeckTheme?.cardFaces} width={118} height={175} />
                       </div>
                     );
                   })}
@@ -1059,8 +1044,8 @@ export function RenderCard({
   card,
   isPlayable = false,
   cardFaces,
-  width = 85,
-  height = 128,
+  width = 96,
+  height = 144,
 }: {
   card: Card;
   isPlayable?: boolean;
