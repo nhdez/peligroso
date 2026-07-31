@@ -88,6 +88,7 @@ interface AuthContextType {
   updateCountry: (countryCode: string) => Promise<void>;
   updateAvatar: (avatarUrl: string) => Promise<void>;
   createDeckTheme: (theme: Omit<DeckTheme, "id">) => void;
+  updateDeckTheme: (id: string, theme: Omit<DeckTheme, "id">) => void;
   deleteDeckTheme: (id: string) => void;
   toggleUserBan: (userId: string) => void;
   toggleUserRole: (userId: string) => void;
@@ -421,16 +422,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  function createDeckTheme(theme: Omit<DeckTheme, "id">) {
+  async function createDeckTheme(theme: Omit<DeckTheme, "id">) {
+    const id = `deck-${Date.now()}`;
     const newTheme: DeckTheme = {
       ...theme,
-      id: `deck-${Date.now()}`,
+      id,
     };
     setDecks((prev) => [...prev, newTheme]);
+
+    if (isSupabaseConfigured && supabase) {
+      await supabase.from("deck_themes").upsert([
+        {
+          id,
+          name: theme.name,
+          description: theme.description,
+          card_back_url: theme.cardBackUrl,
+          card_faces: theme.cardFaces || {},
+        },
+      ]);
+    }
   }
 
-  function deleteDeckTheme(id: string) {
+  async function updateDeckTheme(id: string, theme: Omit<DeckTheme, "id">) {
+    const updatedTheme: DeckTheme = {
+      ...theme,
+      id,
+    };
+    setDecks((prev) => prev.map((d) => (d.id === id ? updatedTheme : d)));
+
+    if (isSupabaseConfigured && supabase) {
+      await supabase.from("deck_themes").upsert([
+        {
+          id,
+          name: theme.name,
+          description: theme.description,
+          card_back_url: theme.cardBackUrl,
+          card_faces: theme.cardFaces || {},
+        },
+      ]);
+    }
+  }
+
+  async function deleteDeckTheme(id: string) {
     setDecks((prev) => prev.filter((d) => d.id !== id));
+    if (isSupabaseConfigured && supabase) {
+      await supabase.from("deck_themes").delete().eq("id", id);
+    }
   }
 
   function toggleUserBan(userId: string) {
@@ -474,6 +511,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         updateCountry,
         updateAvatar,
         createDeckTheme,
+        updateDeckTheme,
         deleteDeckTheme,
         toggleUserBan,
         toggleUserRole,

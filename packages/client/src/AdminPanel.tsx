@@ -5,14 +5,15 @@ import { useStorage } from "./storage/StorageContext.js";
 import type { StorageProviderType } from "shared";
 
 export function AdminPanel({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const { allUsers, decks, createDeckTheme, deleteDeckTheme, toggleUserBan, toggleUserRole } = useAuth();
+  const { allUsers, decks, createDeckTheme, updateDeckTheme, deleteDeckTheme, toggleUserBan, toggleUserRole } = useAuth();
   const { translations, updateTranslationKey, addTranslationKey, addLanguage, availableLanguages } = useI18n();
   const { storageConfig, saveStorageConfig, uploadAsset } = useStorage();
   const [isUploading, setIsUploading] = useState(false);
 
   const [tab, setTab] = useState<"users" | "decks" | "i18n" | "storage">("users");
 
-  // New deck form state
+  // Deck form state
+  const [editingDeckId, setEditingDeckId] = useState<string | null>(null);
   const [deckName, setDeckName] = useState("");
   const [deckDesc, setDeckDesc] = useState("");
   const [cardBackUrl, setCardBackUrl] = useState("");
@@ -91,17 +92,39 @@ export function AdminPanel({ isOpen, onClose }: { isOpen: boolean; onClose: () =
 
   if (!isOpen) return null;
 
-  function handleCreateDeck(e: React.FormEvent) {
+  function handleSaveDeck(e: React.FormEvent) {
     e.preventDefault();
     if (!deckName.trim()) return;
 
-    createDeckTheme({
-      name: deckName,
-      description: deckDesc || "Custom 40-Card Spanish Deck",
-      cardBackUrl: cardBackUrl || "linear-gradient(135deg, #475569 0%, #0f172a 100%)",
-      cardFaces: Object.keys(cardFaces).length > 0 ? cardFaces : undefined,
-    });
+    if (editingDeckId) {
+      updateDeckTheme(editingDeckId, {
+        name: deckName,
+        description: deckDesc || "Custom 40-Card Spanish Deck",
+        cardBackUrl: cardBackUrl || "linear-gradient(135deg, #475569 0%, #0f172a 100%)",
+        cardFaces: Object.keys(cardFaces).length > 0 ? cardFaces : undefined,
+      });
+    } else {
+      createDeckTheme({
+        name: deckName,
+        description: deckDesc || "Custom 40-Card Spanish Deck",
+        cardBackUrl: cardBackUrl || "linear-gradient(135deg, #475569 0%, #0f172a 100%)",
+        cardFaces: Object.keys(cardFaces).length > 0 ? cardFaces : undefined,
+      });
+    }
 
+    resetDeckForm();
+  }
+
+  function handleEditDeck(deck: any) {
+    setEditingDeckId(deck.id);
+    setDeckName(deck.name);
+    setDeckDesc(deck.description);
+    setCardBackUrl(deck.cardBackUrl);
+    setCardFaces(deck.cardFaces || {});
+  }
+
+  function resetDeckForm() {
+    setEditingDeckId(null);
     setDeckName("");
     setDeckDesc("");
     setCardBackUrl("");
@@ -359,10 +382,27 @@ export function AdminPanel({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                 gap: "12px",
               }}
             >
-              <h3 style={{ margin: 0, color: "#f59e0b", fontSize: "1.1rem" }}>
-                ➕ Create 40-Card Spanish Deck Theme
+              <h3 style={{ margin: 0, color: "#f59e0b", fontSize: "1.1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span>{editingDeckId ? `✏️ Edit Deck Theme (${deckName})` : "➕ Create 40-Card Spanish Deck Theme"}</span>
+                {editingDeckId && (
+                  <button
+                    type="button"
+                    onClick={resetDeckForm}
+                    style={{
+                      background: "rgba(255,255,255,0.1)",
+                      color: "#cbd5e1",
+                      border: "none",
+                      borderRadius: "6px",
+                      padding: "3px 8px",
+                      fontSize: "0.75rem",
+                      cursor: "pointer",
+                    }}
+                  >
+                    ✕ Cancel Edit
+                  </button>
+                )}
               </h3>
-              <form onSubmit={handleCreateDeck} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              <form onSubmit={handleSaveDeck} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 <div>
                   <label style={labelStyle}>Deck Name</label>
                   <input
@@ -549,24 +589,45 @@ export function AdminPanel({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                   />
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: "bold", fontSize: "0.95rem" }}>{d.name}</div>
-                    <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>{d.description}</div>
+                    <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
+                      {d.description} {d.cardFaces && `(${Object.keys(d.cardFaces).length}/40 Custom Faces)`}
+                    </div>
                   </div>
-                  {d.id.startsWith("deck-") && (
+
+                  <div style={{ display: "flex", gap: "6px" }}>
                     <button
-                      onClick={() => deleteDeckTheme(d.id)}
+                      onClick={() => handleEditDeck(d)}
                       style={{
-                        padding: "4px 8px",
-                        background: "#dc2626",
+                        padding: "4px 10px",
+                        background: "#2563eb",
                         color: "#ffffff",
                         border: "none",
                         borderRadius: "6px",
                         fontSize: "0.75rem",
+                        fontWeight: "bold",
                         cursor: "pointer",
                       }}
                     >
-                      Delete
+                      ✏️ Edit
                     </button>
-                  )}
+
+                    {d.id.startsWith("deck-") && (
+                      <button
+                        onClick={() => deleteDeckTheme(d.id)}
+                        style={{
+                          padding: "4px 8px",
+                          background: "#dc2626",
+                          color: "#ffffff",
+                          border: "none",
+                          borderRadius: "6px",
+                          fontSize: "0.75rem",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
