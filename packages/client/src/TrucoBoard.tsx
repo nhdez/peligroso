@@ -130,81 +130,18 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
   return (
     <div
       style={{
-        minHeight: "100vh",
+        height: "100vh",
+        maxHeight: "100vh",
+        overflow: "hidden",
         background: "radial-gradient(circle at center, #0f172a 0%, #020617 100%)",
         color: "#f8fafc",
         fontFamily: "'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
         display: "flex",
         flexDirection: "column",
-        alignItems: "center",
-        padding: "16px",
+        padding: "10px",
         boxSizing: "border-box",
       }}
     >
-      {/* Top Header & Scoreboard */}
-      <header
-        style={{
-          width: "100%",
-          maxWidth: "1140px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          background: "rgba(15, 23, 42, 0.85)",
-          backdropFilter: "blur(12px)",
-          padding: "12px 24px",
-          borderRadius: "16px",
-          border: "1px solid rgba(255, 255, 255, 0.1)",
-          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
-          marginBottom: "16px",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-          <h1 style={{ margin: 0, fontSize: "1.5rem", color: "#f59e0b", letterSpacing: "1px" }}>
-            {t("app.title")}
-          </h1>
-          <div style={{ fontSize: "0.85rem", color: "#94a3b8" }}>
-            Hand #{G.handNumber} — You are <strong>Player {myID}</strong> ({profile?.username || "Guest"}) {isMano && "🖐️ (Mano)"}
-          </div>
-        </div>
-
-        {/* Scores */}
-        <div style={{ display: "flex", gap: "20px" }}>
-          <div
-            style={{
-              textAlign: "center",
-              padding: "6px 16px",
-              background: myID === "0" ? "rgba(59, 130, 246, 0.2)" : "rgba(255,255,255,0.05)",
-              borderRadius: "12px",
-              border: myID === "0" ? "1px solid #3b82f6" : "1px solid transparent",
-            }}
-          >
-            <div style={{ fontSize: "0.7rem", color: "#94a3b8", textTransform: "uppercase" }}>
-              Team 0 {G.manoID === "0" && "🖐️"}
-            </div>
-            <div style={{ fontSize: "1.6rem", fontWeight: "bold", color: "#60a5fa" }}>
-              {G.scores["0"]} <span style={{ fontSize: "0.85rem", color: "#64748b" }}>/ 30</span>
-            </div>
-          </div>
-
-          <div
-            style={{
-              textAlign: "center",
-              padding: "6px 16px",
-              background: myID === "1" ? "rgba(59, 130, 246, 0.2)" : "rgba(255,255,255,0.05)",
-              borderRadius: "12px",
-              border: myID === "1" ? "1px solid #3b82f6" : "1px solid transparent",
-            }}
-          >
-            <div style={{ fontSize: "0.7rem", color: "#94a3b8", textTransform: "uppercase" }}>
-              Team 1 {G.manoID === "1" && "🖐️"}
-            </div>
-            <div style={{ fontSize: "1.6rem", fontWeight: "bold", color: "#f472b6" }}>
-              {G.scores["1"]} <span style={{ fontSize: "0.85rem", color: "#64748b" }}>/ 30</span>
-            </div>
-          </div>
-        </div>
-      </header>
-
       {/* 3-Second Hand Finalized Overlay Banner */}
       {G.handOver && !G.winner && (
         <div
@@ -276,7 +213,7 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
           key={G.activeNotice.id}
           style={{
             position: "fixed",
-            top: "84px",
+            top: "24px",
             left: "50%",
             transform: "translateX(-50%)",
             zIndex: 1000,
@@ -299,16 +236,16 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
                 : "2px solid #3b82f6",
             boxShadow: "0 16px 48px rgba(0,0,0,0.6)",
             borderRadius: "20px",
-            padding: "16px 24px",
+            padding: "12px 20px",
             textAlign: "center",
             color: "#ffffff",
           }}
         >
           <div
             style={{
-              fontSize: "1.2rem",
+              fontSize: "1.1rem",
               fontWeight: "bold",
-              marginBottom: "6px",
+              marginBottom: "4px",
               color:
                 G.activeNotice.type === "atorado"
                   ? "#f59e0b"
@@ -320,7 +257,7 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
           >
             {G.activeNotice.title}
           </div>
-          <div style={{ fontSize: "0.95rem", lineHeight: "1.4", color: "#f1f5f9" }}>
+          <div style={{ fontSize: "0.85rem", lineHeight: "1.3", color: "#f1f5f9" }}>
             {G.activeNotice.message}
           </div>
         </div>
@@ -330,26 +267,98 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
       <div
         style={{
           width: "100%",
-          maxWidth: "1140px",
+          height: "100%",
           display: "grid",
-          gridTemplateColumns: "220px 1fr 240px",
-          gap: "16px",
-          alignItems: "stretch",
+          gridTemplateColumns: "210px 1fr 240px",
+          gap: "10px",
+          overflow: "hidden",
         }}
       >
         {/* Left Sidebar: Hand Phase & Match State Tracker */}
         <aside
           style={{
-            background: "rgba(15, 23, 42, 0.75)",
+            background: "rgba(15, 23, 42, 0.85)",
             backdropFilter: "blur(10px)",
-            borderRadius: "20px",
+            borderRadius: "16px",
             border: "1px solid rgba(255, 255, 255, 0.1)",
-            padding: "18px",
+            padding: "14px",
             display: "flex",
             flexDirection: "column",
-            gap: "16px",
+            gap: "12px",
+            height: "100%",
+            boxSizing: "border-box",
+            overflowY: "auto",
           }}
         >
+          {/* App Header & Leave Match Button */}
+          <div style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", paddingBottom: "10px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h2 style={{ margin: 0, fontSize: "1.2rem", color: "#f59e0b", letterSpacing: "0.5px" }}>
+                🔥 Peligroso
+              </h2>
+              <button
+                onClick={() => window.location.reload()}
+                title="Leave Match"
+                style={{
+                  background: "rgba(239, 68, 68, 0.2)",
+                  color: "#fca5a5",
+                  border: "1px solid #ef4444",
+                  borderRadius: "6px",
+                  padding: "3px 8px",
+                  fontSize: "0.7rem",
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                }}
+              >
+                Exit 🚪
+              </button>
+            </div>
+            <div style={{ fontSize: "0.75rem", color: "#94a3b8", marginTop: "4px" }}>
+              Hand #{G.handNumber} — P{myID} ({profile?.username || "Guest"}) {isMano && "🖐️ (Mano)"}
+            </div>
+          </div>
+
+          {/* Integrated Scoreboard */}
+          <div>
+            <div style={{ fontSize: "0.7rem", color: "#94a3b8", textTransform: "uppercase", fontWeight: "bold", marginBottom: "6px" }}>
+              🏆 Match Score
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "6px",
+                  background: teamOf(myID, G.numPlayers) === "0" ? "rgba(59, 130, 246, 0.25)" : "rgba(255,255,255,0.04)",
+                  borderRadius: "10px",
+                  border: teamOf(myID, G.numPlayers) === "0" ? "1px solid #3b82f6" : "1px solid rgba(255,255,255,0.08)",
+                }}
+              >
+                <div style={{ fontSize: "0.65rem", color: "#94a3b8", textTransform: "uppercase" }}>
+                  Team 0 {G.manoID === "0" && "🖐️"}
+                </div>
+                <div style={{ fontSize: "1.3rem", fontWeight: "bold", color: "#60a5fa" }}>
+                  {G.scores["0"]} <span style={{ fontSize: "0.75rem", color: "#64748b" }}>/30</span>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "6px",
+                  background: teamOf(myID, G.numPlayers) === "1" ? "rgba(59, 130, 246, 0.25)" : "rgba(255,255,255,0.04)",
+                  borderRadius: "10px",
+                  border: teamOf(myID, G.numPlayers) === "1" ? "1px solid #3b82f6" : "1px solid rgba(255,255,255,0.08)",
+                }}
+              >
+                <div style={{ fontSize: "0.65rem", color: "#94a3b8", textTransform: "uppercase" }}>
+                  Team 1 {G.manoID === "1" && "🖐️"}
+                </div>
+                <div style={{ fontSize: "1.3rem", fontWeight: "bold", color: "#f472b6" }}>
+                  {G.scores["1"]} <span style={{ fontSize: "0.75rem", color: "#64748b" }}>/30</span>
+                </div>
+              </div>
+            </div>
+          </div>
           {/* Active Phase Badge */}
           <div>
             <div style={{ fontSize: "0.75rem", color: "#94a3b8", textTransform: "uppercase", fontWeight: "bold", marginBottom: "6px" }}>
@@ -457,23 +466,34 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
             }
           }}
           style={{
-            position: "relative",
-            borderRadius: "24px",
-            overflow: "hidden",
-            border: isDragOver
-              ? "2px dashed #f59e0b"
-              : isDragging
-              ? "2px dashed #60a5fa"
-              : "2px solid rgba(245, 158, 11, 0.3)",
-            boxShadow: "0 20px 50px rgba(0,0,0,0.5)",
-            padding: "20px",
             display: "flex",
             flexDirection: "column",
-            justifyContent: "space-between",
-            minHeight: "560px",
-            transition: "border 0.2s ease",
+            height: "100%",
+            gap: "10px",
+            overflow: "hidden",
           }}
         >
+          {/* Top Arena Mat Zone */}
+          <div
+            style={{
+              flex: 1,
+              minHeight: 0,
+              position: "relative",
+              borderRadius: "20px",
+              overflow: "hidden",
+              border: isDragOver
+                ? "2px dashed #f59e0b"
+                : isDragging
+                ? "2px dashed #60a5fa"
+                : "2px solid rgba(245, 158, 11, 0.3)",
+              boxShadow: "0 20px 50px rgba(0,0,0,0.5)",
+              padding: "12px",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              transition: "border 0.2s ease",
+            }}
+          >
           {/* Custom Mat Background Texture Layer with Smooth Dynamic Transition */}
           <div
             style={{
@@ -745,17 +765,21 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
                 </>
               )}
             </div>
+          </div>
+        </div>
 
-            {/* Action Control Panel & My Video Avatar */}
-            <div
-              style={{
-                background: "rgba(15, 23, 42, 0.85)",
-                backdropFilter: "blur(8px)",
-                padding: "16px",
-                borderRadius: "16px",
-                border: "1px solid rgba(255, 255, 255, 0.15)",
-              }}
-            >
+        {/* Action Control Panel & My Video Avatar Dock */}
+        <div
+          style={{
+            background: "rgba(15, 23, 42, 0.85)",
+            backdropFilter: "blur(8px)",
+            padding: "10px 14px",
+            borderRadius: "16px",
+            border: "1px solid rgba(255, 255, 255, 0.15)",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+            flexShrink: 0,
+          }}
+        >
               <div style={{ display: "flex", justifyContent: "center", marginBottom: "12px" }}>
                 <VideoAvatar
                   stream={myVideoStream}
@@ -982,8 +1006,7 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
                 </div>
               </div>
             </div>
-          </div>
-        </main>
+          </main>
 
         {/* Right Sidebar: In-Game Chat & WebRTC Voice/Video Panel */}
         <SocialPanel

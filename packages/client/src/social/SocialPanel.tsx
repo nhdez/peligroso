@@ -241,7 +241,7 @@ export function SocialPanel({
         padding: "16px",
         display: "flex",
         flexDirection: "column",
-        height: "560px",
+        height: "100%",
         boxSizing: "border-box",
       }}
     >
