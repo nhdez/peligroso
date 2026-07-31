@@ -18,7 +18,8 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Ensure country_code column exists if table was created previously
+-- Ensure columns exist if table was created previously
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS display_name TEXT DEFAULT '';
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS country_code TEXT NOT NULL DEFAULT 'AR';
 
 -- 2. Create Deck Themes Table
