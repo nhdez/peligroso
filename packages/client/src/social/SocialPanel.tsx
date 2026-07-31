@@ -42,11 +42,13 @@ export function SocialPanel({
   matchID = "demo-match",
   logs,
   onVideoStreamChange,
+  onLeaveMatch,
 }: {
   myID: string;
   matchID?: string;
   logs: GameLogMessage[];
   onVideoStreamChange?: (stream: MediaStream | null) => void;
+  onLeaveMatch?: () => void;
 }) {
   const { profile } = useAuth();
   const { t } = useI18n();
@@ -84,12 +86,7 @@ export function SocialPanel({
 
   useEffect(() => {
     const vm = voiceManagerRef.current;
-    vm.onStateChange((states) => setVoiceParticipants(states));
-
     const vidMgr = videoManagerRef.current;
-    vidMgr.onStreamChange((stream) => {
-      if (onVideoStreamChange) onVideoStreamChange(stream);
-    });
 
     // Fetch persisted game chat messages from Supabase Postgres
     if (isSupabaseConfigured && supabase) {
@@ -115,8 +112,8 @@ export function SocialPanel({
     }
 
     return () => {
-      vm.leave();
-      vidMgr.stopLocalStream();
+      vm.stop();
+      vidMgr.stopCamera();
     };
   }, [matchID, myID, onVideoStreamChange]);
 
