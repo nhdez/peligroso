@@ -115,7 +115,9 @@ export function SocialPanel({
       vm.stop();
       vidMgr.stopCamera();
     };
-  }, [matchID, myID, onVideoStreamChange]);
+    // onVideoStreamChange is not used inside this effect (only in handleToggleVideo)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [matchID, myID]);
 
   useEffect(() => {
     if (isSupabaseConfigured && supabase && matchID) {

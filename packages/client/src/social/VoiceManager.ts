@@ -125,13 +125,19 @@ export class VoiceManager {
   }
 
   stop() {
-    if (this.animFrameId) cancelAnimationFrame(this.animFrameId);
+    if (this.animFrameId) {
+      cancelAnimationFrame(this.animFrameId);
+      this.animFrameId = null;
+    }
     if (this.mediaStream) {
       this.mediaStream.getTracks().forEach((t) => t.stop());
+      this.mediaStream = null;
     }
-    if (this.audioContext) {
+    if (this.audioContext && this.audioContext.state !== "closed") {
       this.audioContext.close();
     }
+    this.audioContext = null;
+    this.analyser = null;
     this.peerAudioElements.forEach((el) => el.remove());
     this.peerAudioElements.clear();
   }
