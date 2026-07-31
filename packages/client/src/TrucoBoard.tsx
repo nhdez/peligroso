@@ -290,29 +290,11 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
             overflowY: "auto",
           }}
         >
-          {/* App Header & Leave Match Button */}
+          {/* App Header & Match Tracker */}
           <div style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", paddingBottom: "10px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h2 style={{ margin: 0, fontSize: "1.2rem", color: "#f59e0b", letterSpacing: "0.5px" }}>
-                🔥 Peligroso
-              </h2>
-              <button
-                onClick={() => window.location.reload()}
-                title="Leave Match"
-                style={{
-                  background: "rgba(239, 68, 68, 0.2)",
-                  color: "#fca5a5",
-                  border: "1px solid #ef4444",
-                  borderRadius: "6px",
-                  padding: "3px 8px",
-                  fontSize: "0.7rem",
-                  fontWeight: "bold",
-                  cursor: "pointer",
-                }}
-              >
-                Exit 🚪
-              </button>
-            </div>
+            <h2 style={{ margin: 0, fontSize: "1.25rem", color: "#f59e0b", letterSpacing: "0.5px" }}>
+              🔥 Peligroso
+            </h2>
             <div style={{ fontSize: "0.75rem", color: "#94a3b8", marginTop: "4px" }}>
               Hand #{G.handNumber} — P{myID} ({profile?.username || "Guest"}) {isMano && "🖐️ (Mano)"}
             </div>

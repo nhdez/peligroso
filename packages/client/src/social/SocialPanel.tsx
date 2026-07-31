@@ -245,6 +245,30 @@ export function SocialPanel({
         boxSizing: "border-box",
       }}
     >
+      {/* Leave Match to Lobby Button */}
+      <button
+        onClick={() => window.location.reload()}
+        style={{
+          width: "100%",
+          padding: "10px 14px",
+          marginBottom: "12px",
+          background: "linear-gradient(135deg, #dc2626 0%, #991b1b 100%)",
+          color: "#ffffff",
+          border: "none",
+          borderRadius: "12px",
+          fontWeight: "bold",
+          fontSize: "0.85rem",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "8px",
+          boxShadow: "0 4px 12px rgba(220, 38, 38, 0.4)",
+        }}
+      >
+        <span>🚪</span> Leave Match to Lobby
+      </button>
+
       {/* 1. Voice & Video Communication Controls */}
       <div
         style={{
