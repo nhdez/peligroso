@@ -536,14 +536,50 @@ export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps
             />
           </div>
 
-          {/* Top-Right: Opponent Video Avatar / Live Cam (Prominent Size 64) */}
-          <div style={{ position: "absolute", top: "10px", right: "12px", zIndex: 10, display: "flex", alignItems: "center", gap: "8px" }}>
+          {/* Top-Right: Opponent Video Avatar / Live Cam & Docked Face-Down Hand */}
+          <div style={{ position: "absolute", top: "10px", right: "12px", zIndex: 10, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
             <VideoAvatar
               stream={null}
               username={`Player ${opponentID}`}
               size={64}
               isCurrentTurn={ctx.currentPlayer === opponentID}
             />
+
+            {/* Docked Opponent Face-Down Hand Fan */}
+            <div style={{ display: "flex", justifyContent: "flex-end", position: "relative", minWidth: "70px", height: "46px", marginTop: "2px" }}>
+              {(G.hands[opponentID] || []).map((card, idx, arr) => {
+                const total = arr.length;
+                let angle = 0;
+                let translateY = 0;
+                if (total === 2) {
+                  angle = idx === 0 ? -8 : 8;
+                  translateY = 2;
+                } else if (total >= 3) {
+                  angle = idx === 0 ? -12 : idx === 1 ? 0 : 12;
+                  translateY = idx === 1 ? 0 : 4;
+                }
+
+                return (
+                  <div
+                    key={`opp-fan-${card.id}-${idx}`}
+                    title="Opponent's Hand (Face Down)"
+                    style={{
+                      width: "32px",
+                      height: "46px",
+                      borderRadius: "5px",
+                      background: activeDeckTheme.cardBackUrl.startsWith("http") || activeDeckTheme.cardBackUrl.startsWith("data:")
+                        ? `url("${activeDeckTheme.cardBackUrl}") center/cover`
+                        : activeDeckTheme.cardBackUrl,
+                      border: "1px solid rgba(255, 255, 255, 0.4)",
+                      boxShadow: "0 4px 10px rgba(0,0,0,0.6)",
+                      transform: `translateY(${translateY}px) rotate(${angle}deg)`,
+                      margin: "0 -6px",
+                      transition: "all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                    }}
+                  />
+                );
+              })}
+            </div>
           </div>
 
           {/* Table Content Wrapper */}
@@ -714,43 +750,6 @@ export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps
               ) : (
                 /* 2-Player 1v1 Table */
                 <>
-                  <div style={{ display: "flex", justifyContent: "center", alignItems: "center", marginBottom: "10px" }}>
-                    {/* Opponent Fan Hand Display (Face-down cards synced live with reordering) */}
-                    <div style={{ display: "flex", justifyContent: "center", position: "relative", minWidth: "120px", height: "60px", padding: "0 10px" }}>
-                      {(G.hands[opponentID] || []).map((card, idx, arr) => {
-                        const total = arr.length;
-                        let angle = 0;
-                        let translateY = 0;
-                        if (total === 2) {
-                          angle = idx === 0 ? -8 : 8;
-                          translateY = 2;
-                        } else if (total >= 3) {
-                          angle = idx === 0 ? -12 : idx === 1 ? 0 : 12;
-                          translateY = idx === 1 ? 0 : 4;
-                        }
-
-                        return (
-                          <div
-                            key={`opp-fan-${card.id}-${idx}`}
-                            title="Opponent's Hand (Face Down)"
-                            style={{
-                              width: "38px",
-                              height: "56px",
-                              borderRadius: "6px",
-                              background: activeDeckTheme.cardBackUrl.startsWith("http") || activeDeckTheme.cardBackUrl.startsWith("data:")
-                                ? `url("${activeDeckTheme.cardBackUrl}") center/cover`
-                                : activeDeckTheme.cardBackUrl,
-                              border: "1px solid rgba(255, 255, 255, 0.3)",
-                              boxShadow: "0 6px 14px rgba(0,0,0,0.6)",
-                              transform: `translateY(${translateY}px) rotate(${angle}deg)`,
-                              margin: "0 -8px",
-                              transition: "all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1)",
-                            }}
-                          />
-                        );
-                      })}
-                    </div>
-                  </div>
                   <div style={{ fontSize: "0.85rem", color: "#cbd5e1", marginBottom: "8px", textShadow: "0 1px 3px rgba(0,0,0,0.8)" }}>
                     {t("table.opponent_cards", { id: opponentID })}
                   </div>
