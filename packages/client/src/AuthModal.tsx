@@ -1,9 +1,9 @@
-import React, { useState } from "react";
-import { useAuth, PRESET_MATS, COUNTRY_LIST } from "./AuthContext.js";
+import React, { useState, useEffect } from "react";
+import { useAuth, PRESET_MATS, COUNTRY_LIST, getCountryFlag } from "./AuthContext.js";
 import { useStorage } from "./storage/StorageContext.js";
 
 export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const { signIn, signUp, signInAsGuest, isConfigured, profile, decks, updateCustomization, updateCountry } = useAuth();
+  const { signIn, signUp, signInAsGuest, signOut, isConfigured, profile, decks, updateCustomization, updateCountry } = useAuth();
   const { uploadAsset } = useStorage();
   const [isUploadingMat, setIsUploadingMat] = useState(false);
   const [tab, setTab] = useState<"signin" | "signup" | "customization" | "guest">("customization");
@@ -20,6 +20,17 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
   const [matOpacity, setMatOpacity] = useState(profile?.mat_opacity ?? 0.85);
   const [selectedCountry, setSelectedCountry] = useState(profile?.country_code || "AR");
 
+  const isLoggedIn = Boolean(profile && !profile.is_guest);
+
+  useEffect(() => {
+    if (profile) {
+      setSelectedDeck(profile.selected_deck_id || "classic-gold");
+      setMatUrl(profile.custom_mat_url || PRESET_MATS[0].url);
+      setMatOpacity(profile.mat_opacity ?? 0.85);
+      setSelectedCountry(profile.country_code || "AR");
+    }
+  }, [profile]);
+
   if (!isOpen) return null;
 
   async function handleSubmit(e: React.FormEvent) {
@@ -27,28 +38,33 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     setError(null);
     setLoading(true);
 
-    if (tab === "signin") {
-      const res = await signIn(email, password);
-      if (res.error) setError(res.error);
-      else onClose();
-    } else if (tab === "signup") {
-      if (!username.trim()) {
-        setError("Username is required");
-        setLoading(false);
-        return;
+    try {
+      if (tab === "signin") {
+        const res = await signIn(email, password);
+        if (res.error) setError(res.error);
+        else onClose();
+      } else if (tab === "signup") {
+        if (!username.trim()) {
+          setError("Username is required");
+          setLoading(false);
+          return;
+        }
+        const res = await signUp(email, password, username);
+        if (res.error) setError(res.error);
+        else onClose();
+      } else if (tab === "customization") {
+        await updateCustomization(selectedDeck, matUrl, matOpacity);
+        await updateCountry(selectedCountry);
+        onClose();
+      } else {
+        signInAsGuest(username || undefined);
+        onClose();
       }
-      const res = await signUp(email, password, username);
-      if (res.error) setError(res.error);
-      else onClose();
-    } else if (tab === "customization") {
-      updateCustomization(selectedDeck, matUrl, matOpacity);
-      updateCountry(selectedCountry);
-      onClose();
-    } else {
-      signInAsGuest(username || undefined);
-      onClose();
+    } catch (err: any) {
+      setError(err.message || "An unexpected error occurred");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   async function handleMatFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -118,29 +134,74 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
           🔑 Account & Customization
         </h2>
 
-        {/* Tab Selection */}
-        <div
-          style={{
-            display: "flex",
-            background: "rgba(15, 23, 42, 0.6)",
-            borderRadius: "12px",
-            padding: "4px",
-            marginBottom: "20px",
-          }}
-        >
-          <button onClick={() => setTab("customization")} style={tabBtnStyle(tab === "customization")}>
-            🎨 Profile & Customization
-          </button>
-          <button onClick={() => setTab("signin")} style={tabBtnStyle(tab === "signin")}>
-            Sign In
-          </button>
-          <button onClick={() => setTab("signup")} style={tabBtnStyle(tab === "signup")}>
-            Sign Up
-          </button>
-          <button onClick={() => setTab("guest")} style={tabBtnStyle(tab === "guest")}>
-            Guest
-          </button>
-        </div>
+        {/* Logged In Status Banner */}
+        {isLoggedIn ? (
+          <div
+            style={{
+              background: "rgba(15, 23, 42, 0.7)",
+              borderRadius: "14px",
+              padding: "12px 16px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "18px",
+              border: "1px solid rgba(255,255,255,0.1)",
+            }}
+          >
+            <div>
+              <div style={{ fontWeight: "bold", color: "#f59e0b", fontSize: "0.95rem" }}>
+                {getCountryFlag(profile.country_code)} {profile.username} {profile.role === "admin" && "🛡️"}
+              </div>
+              <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
+                Logged in via Supabase Auth
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={async () => {
+                await signOut();
+                onClose();
+              }}
+              style={{
+                padding: "6px 12px",
+                background: "#ef4444",
+                color: "#ffffff",
+                border: "none",
+                borderRadius: "8px",
+                fontWeight: "bold",
+                fontSize: "0.8rem",
+                cursor: "pointer",
+              }}
+            >
+              Sign Out 🚪
+            </button>
+          </div>
+        ) : (
+          /* Tab Selection for Logged-Out Users */
+          <div
+            style={{
+              display: "flex",
+              background: "rgba(15, 23, 42, 0.6)",
+              borderRadius: "12px",
+              padding: "4px",
+              marginBottom: "20px",
+            }}
+          >
+            <button onClick={() => setTab("customization")} style={tabBtnStyle(tab === "customization")}>
+              🎨 Profile
+            </button>
+            <button onClick={() => setTab("signin")} style={tabBtnStyle(tab === "signin")}>
+              Sign In
+            </button>
+            <button onClick={() => setTab("signup")} style={tabBtnStyle(tab === "signup")}>
+              Sign Up
+            </button>
+            <button onClick={() => setTab("guest")} style={tabBtnStyle(tab === "guest")}>
+              Guest
+            </button>
+          </div>
+        )}
 
         {!isConfigured && (tab === "signin" || tab === "signup") && (
           <div
@@ -175,7 +236,7 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         )}
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-          {tab === "customization" && (
+          {(tab === "customization" || isLoggedIn) && (
             <>
               {/* Select Country */}
               <div>
@@ -243,8 +304,10 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                   type="file"
                   accept="image/*"
                   onChange={handleMatFileUpload}
+                  disabled={isUploadingMat}
                   style={{ color: "#94a3b8", fontSize: "0.85rem" }}
                 />
+                {isUploadingMat && <span style={{ fontSize: "0.75rem", color: "#f59e0b" }}> ⏳ Uploading to Object Storage...</span>}
               </div>
 
               {/* Mat Opacity Slider */}
@@ -265,7 +328,7 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
             </>
           )}
 
-          {tab === "signup" && (
+          {!isLoggedIn && tab === "signup" && (
             <div>
               <label style={labelStyle}>Username</label>
               <input
@@ -279,7 +342,7 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
             </div>
           )}
 
-          {tab === "guest" && (
+          {!isLoggedIn && tab === "guest" && (
             <div>
               <label style={labelStyle}>Guest Display Name</label>
               <input
@@ -292,7 +355,7 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
             </div>
           )}
 
-          {(tab === "signin" || tab === "signup") && (
+          {!isLoggedIn && (tab === "signin" || tab === "signup") && (
             <>
               <div>
                 <label style={labelStyle}>Email Address</label>
@@ -322,7 +385,7 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || isUploadingMat}
             style={{
               marginTop: "8px",
               padding: "12px",
@@ -332,13 +395,13 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
               borderRadius: "10px",
               fontWeight: "bold",
               fontSize: "0.95rem",
-              cursor: loading ? "not-allowed" : "pointer",
+              cursor: loading || isUploadingMat ? "not-allowed" : "pointer",
             }}
           >
             {loading
-              ? "Processing..."
-              : tab === "customization"
-              ? "Save Customizations"
+              ? "Saving..."
+              : isLoggedIn || tab === "customization"
+              ? "Save Profile Customizations"
               : tab === "signin"
               ? "Sign In"
               : tab === "signup"

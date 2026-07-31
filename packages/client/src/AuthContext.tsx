@@ -83,8 +83,8 @@ interface AuthContextType {
   signInAsGuest: (username?: string) => void;
   signOut: () => Promise<void>;
   updateStats: (won: boolean) => void;
-  updateCustomization: (deckId: string, matUrl: string, opacity: number) => void;
-  updateCountry: (countryCode: string) => void;
+  updateCustomization: (deckId: string, matUrl: string, opacity: number) => Promise<void>;
+  updateCountry: (countryCode: string) => Promise<void>;
   createDeckTheme: (theme: Omit<DeckTheme, "id">) => void;
   deleteDeckTheme: (id: string) => void;
   toggleUserBan: (userId: string) => void;
@@ -241,7 +241,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (data) {
-        setProfile({ ...data, is_guest: false, country_code: data.country_code || "AR" });
+        setProfile({
+          id: data.id,
+          username: data.username || user.email?.split("@")[0] || "Player",
+          display_name: data.display_name || data.username || "Player",
+          elo_rating: data.elo_rating ?? 1200,
+          matches_played: data.matches_played ?? 0,
+          matches_won: data.matches_won ?? 0,
+          is_guest: false,
+          role: data.role || "user",
+          is_banned: data.is_banned ?? false,
+          selected_deck_id: data.selected_deck_id || "classic-gold",
+          custom_mat_url: data.custom_mat_url || PRESET_MATS[0].url,
+          mat_opacity: data.mat_opacity ?? 0.85,
+          country_code: data.country_code || "AR",
+        });
       } else if (error && error.code === "PGRST116") {
         const username = user.email?.split("@")[0] || `user_${user.id.slice(0, 6)}`;
         const newProf: UserProfile = {
@@ -332,16 +346,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (profile.is_guest) {
       localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(updated));
-    } else if (supabase && user) {
+    } else if (supabase && profile.id) {
       supabase.from("profiles").update({
         matches_played: updated.matches_played,
         matches_won: updated.matches_won,
         elo_rating: updated.elo_rating,
-      }).eq("id", user.id);
+      }).eq("id", profile.id);
     }
   }
 
-  function updateCustomization(deckId: string, matUrl: string, opacity: number) {
+  async function updateCustomization(deckId: string, matUrl: string, opacity: number) {
     if (!profile) return;
     const updated: UserProfile = {
       ...profile,
@@ -354,16 +368,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (profile.is_guest) {
       localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(updated));
-    } else if (supabase && user) {
-      supabase.from("profiles").update({
+    } else if (supabase && profile.id) {
+      const { error } = await supabase.from("profiles").update({
         selected_deck_id: deckId,
         custom_mat_url: matUrl,
         mat_opacity: opacity,
-      }).eq("id", user.id);
+      }).eq("id", profile.id);
+
+      if (error) console.error("Error committing customization to Supabase:", error);
     }
   }
 
-  function updateCountry(countryCode: string) {
+  async function updateCountry(countryCode: string) {
     if (!profile) return;
     const updated: UserProfile = {
       ...profile,
@@ -374,10 +390,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (profile.is_guest) {
       localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(updated));
-    } else if (supabase && user) {
-      supabase.from("profiles").update({
+    } else if (supabase && profile.id) {
+      const { error } = await supabase.from("profiles").update({
         country_code: countryCode,
-      }).eq("id", user.id);
+      }).eq("id", profile.id);
+
+      if (error) console.error("Error committing country to Supabase:", error);
     }
   }
 

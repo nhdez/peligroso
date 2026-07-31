@@ -14,8 +14,12 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   selected_deck_id TEXT NOT NULL DEFAULT 'classic-spanish',
   custom_mat_url TEXT DEFAULT '',
   mat_opacity REAL DEFAULT 0.85,
+  country_code TEXT NOT NULL DEFAULT 'AR',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Ensure country_code column exists if table was created previously
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS country_code TEXT NOT NULL DEFAULT 'AR';
 
 -- 2. Create Deck Themes Table
 CREATE TABLE IF NOT EXISTS public.deck_themes (
