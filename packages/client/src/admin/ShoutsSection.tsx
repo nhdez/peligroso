@@ -68,18 +68,25 @@ export function ShoutsSection() {
         const recordedFile = new File([audioBlob], fileName, { type: "audio/webm" });
 
         setIsUploading(true);
-        setUploadStatus("Uploading live recording...");
+        setUploadStatus("Processing live voice recording...");
+
+        // Convert audio Blob to permanent Base64 Data URL
+        const dataUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(audioBlob);
+        });
 
         try {
           const url = await uploadAsset(recordedFile, "shouts");
-          setMp3Url(url);
+          const finalUrl = (url && (url.startsWith("http") || url.startsWith("data:"))) ? url : dataUrl;
+          setMp3Url(finalUrl);
           setUploadStatus("Live voice recording saved & uploaded successfully!");
           if (!title) {
             setTitle(`${callType.toUpperCase()} Recorded Shout`);
           }
         } catch (err: any) {
-          // Local fallback URL if storage fails
-          const dataUrl = URL.createObjectURL(audioBlob);
+          // Guaranteed permanent Base64 Data URL fallback (NEVER blob:)
           setMp3Url(dataUrl);
           setUploadStatus("Live voice recording ready!");
           if (!title) {

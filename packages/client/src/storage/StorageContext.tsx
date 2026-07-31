@@ -18,7 +18,7 @@ export const DEFAULT_STORAGE_CONFIG: ObjectStorageConfig = {
 interface StorageContextType {
   storageConfig: ObjectStorageConfig;
   saveStorageConfig: (config: ObjectStorageConfig) => void;
-  uploadAsset: (file: File, folder: "avatars" | "mats" | "decks") => Promise<string>;
+  uploadAsset: (file: File, folder: "avatars" | "mats" | "decks" | "shouts") => Promise<string>;
 }
 
 const StorageContext = createContext<StorageContextType | undefined>(undefined);
@@ -42,7 +42,7 @@ export function StorageProvider({ children }: { children: React.ReactNode }) {
     setStorageConfig(config);
   }
 
-  async function uploadAsset(file: File, folder: "avatars" | "mats" | "decks"): Promise<string> {
+  async function uploadAsset(file: File, folder: "avatars" | "mats" | "decks" | "shouts"): Promise<string> {
     const sanitizeName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
     const filePath = `${folder}/${Date.now()}-${sanitizeName}`;
 

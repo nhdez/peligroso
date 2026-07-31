@@ -557,7 +557,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [shouts, setShouts] = useState<AudioShout[]>(() => {
     const saved = localStorage.getItem(SHOUTS_STORAGE_KEY);
     if (saved) {
-      try { return JSON.parse(saved); } catch {}
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed.map((s: AudioShout) => {
+            if (s.mp3Url && s.mp3Url.startsWith("blob:")) {
+              const defaultPreset = PRESET_SHOUTS.find((p) => p.callType === s.callType);
+              return { ...s, mp3Url: defaultPreset?.mp3Url || "" };
+            }
+            return s;
+          });
+        }
+      } catch {}
     }
     return PRESET_SHOUTS;
   });
@@ -595,14 +606,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   function playShoutAudio(callType: CallType) {
-    const matching = shouts.filter((s) => s.callType === callType);
+    const matching = shouts.filter((s) => s.callType === callType && s.mp3Url && !s.mp3Url.startsWith("blob:"));
     if (matching.length === 0) return;
     const chosen = matching[Math.floor(Math.random() * matching.length)];
     if (chosen?.mp3Url) {
       try {
         const audio = new Audio(chosen.mp3Url);
         audio.volume = 0.85;
-        audio.play().catch(() => {});
+        audio.play().catch((err) => {
+          console.warn("Audio play blocked or unsupported:", err);
+        });
       } catch (e) {
         console.error("Audio playback error:", e);
       }
