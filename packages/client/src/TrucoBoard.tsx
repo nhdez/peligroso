@@ -494,16 +494,38 @@ export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps
             }}
           />
 
-          {/* Active Battleground Mat Badge */}
+          {/* Top-Left: Your Video Avatar / Live Cam (Prominent Size 64) */}
+          <div style={{ position: "absolute", top: "10px", left: "12px", zIndex: 10, display: "flex", alignItems: "center", gap: "8px" }}>
+            <VideoAvatar
+              stream={myVideoStream}
+              username={profile?.username || `Player ${myID}`}
+              avatarUrl={profile?.avatar_url}
+              size={64}
+              isCurrentTurn={isMyTurn}
+            />
+          </div>
+
+          {/* Top-Right: Opponent Video Avatar / Live Cam (Prominent Size 64) */}
+          <div style={{ position: "absolute", top: "10px", right: "12px", zIndex: 10, display: "flex", alignItems: "center", gap: "8px" }}>
+            <VideoAvatar
+              stream={null}
+              username={`Player ${opponentID}`}
+              size={64}
+              isCurrentTurn={ctx.currentPlayer === opponentID}
+            />
+          </div>
+
+          {/* Top-Center: Active Battleground Mat Badge */}
           <div
             style={{
               position: "absolute",
               top: "12px",
-              right: "16px",
+              left: "50%",
+              transform: "translateX(-50%)",
               zIndex: 2,
-              background: "rgba(15, 23, 42, 0.75)",
+              background: "rgba(15, 23, 42, 0.8)",
               backdropFilter: "blur(6px)",
-              padding: "4px 10px",
+              padding: "4px 12px",
               borderRadius: "10px",
               fontSize: "0.75rem",
               color: "#f59e0b",
@@ -683,14 +705,7 @@ export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps
               ) : (
                 /* 2-Player 1v1 Table */
                 <>
-                  <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "14px", marginBottom: "10px" }}>
-                    <VideoAvatar
-                      stream={null}
-                      username={`Player ${opponentID}`}
-                      size={52}
-                      isCurrentTurn={ctx.currentPlayer === opponentID}
-                    />
-
+                  <div style={{ display: "flex", justifyContent: "center", alignItems: "center", marginBottom: "10px" }}>
                     {/* Opponent Fan Hand Display (Face-down cards synced live with reordering) */}
                     <div style={{ display: "flex", justifyContent: "center", position: "relative", minWidth: "120px", height: "60px", padding: "0 10px" }}>
                       {(G.hands[opponentID] || []).map((card, idx, arr) => {
@@ -762,16 +777,6 @@ export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps
             flexShrink: 0,
           }}
         >
-              <div style={{ display: "flex", justifyContent: "center", marginBottom: "12px" }}>
-                <VideoAvatar
-                  stream={myVideoStream}
-                  username={profile?.username || `Player ${myID}`}
-                  avatarUrl={profile?.avatar_url}
-                  size={56}
-                  isCurrentTurn={isMyTurn}
-                />
-              </div>
-
               {/* Call Response Banner (if pending for user) */}
               {isEnvidoResponder && (
                 <div style={{ marginBottom: "12px", textAlign: "center" }}>
