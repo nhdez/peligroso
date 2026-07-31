@@ -996,6 +996,7 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
           matchID={ctx.matchID || "demo-match"}
           logs={G.logs}
           onVideoStreamChange={(stream) => setMyVideoStream(stream)}
+          onLeaveMatch={(props as any)?.onLeaveMatch}
         />
       </div>
     </div>

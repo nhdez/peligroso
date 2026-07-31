@@ -247,7 +247,10 @@ export function SocialPanel({
     >
       {/* Leave Match to Lobby Button */}
       <button
-        onClick={() => window.location.reload()}
+        onClick={() => {
+          if (onLeaveMatch) onLeaveMatch();
+          else window.location.reload();
+        }}
         style={{
           width: "100%",
           padding: "10px 14px",

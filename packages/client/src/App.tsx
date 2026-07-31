@@ -49,6 +49,18 @@ function MainApp() {
     setMode("ranked-1v1");
   }
 
+  if (mode !== "lobby") {
+    return (
+      <div style={{ width: "100vw", height: "100vh", overflow: "hidden", background: "#020617" }}>
+        {mode === "ranked-1v1" || mode === "ai-1v1" ? (
+          <PeligrosoClient1v1AI playerID={playerID} matchID={activeMatchID} onLeaveMatch={() => setMode("lobby")} />
+        ) : (
+          <PeligrosoClient2v2AI playerID={playerID} matchID={activeMatchID} onLeaveMatch={() => setMode("lobby")} />
+        )}
+      </div>
+    );
+  }
+
   return (
     <div
       style={{
@@ -198,43 +210,17 @@ function MainApp() {
         />
       )}
 
-      {/* Active Game Session */}
-      {mode !== "lobby" ? (
-        <div style={{ width: "100%", maxWidth: "1280px" }}>
-          <button
-            onClick={() => setMode("lobby")}
-            style={{
-              marginBottom: "16px",
-              padding: "8px 16px",
-              background: "rgba(255,255,255,0.08)",
-              color: "#cbd5e1",
-              border: "1px solid rgba(255,255,255,0.15)",
-              borderRadius: "10px",
-              fontWeight: "bold",
-              cursor: "pointer",
-            }}
-          >
-            ⬅️ Leave Match to Lobby
-          </button>
-
-          {mode === "ranked-1v1" || mode === "ai-1v1" ? (
-            <PeligrosoClient1v1AI playerID={playerID} matchID={activeMatchID} />
-          ) : (
-            <PeligrosoClient2v2AI playerID={playerID} matchID={activeMatchID} />
-          )}
-        </div>
-      ) : (
-        /* Main Lobby Dashboard: 3-Column Grid */
-        <div
-          style={{
-            width: "100%",
-            maxWidth: "1280px",
-            display: "grid",
-            gridTemplateColumns: "360px 1fr 340px",
-            gap: "20px",
-            alignItems: "stretch",
-          }}
-        >
+      {/* Main Lobby Dashboard: 3-Column Grid */}
+      <div
+        style={{
+          width: "100%",
+          maxWidth: "1280px",
+          display: "grid",
+          gridTemplateColumns: "360px 1fr 340px",
+          gap: "20px",
+          alignItems: "stretch",
+        }}
+      >
           {/* Left Column: Game Modes & Match Setup */}
           <div
             style={{
@@ -466,7 +452,6 @@ function MainApp() {
             </button>
           </div>
         </div>
-      )}
 
       {/* Modals */}
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
