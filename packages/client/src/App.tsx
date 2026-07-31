@@ -19,6 +19,7 @@ import { DecksSection } from "./admin/DecksSection.js";
 import { I18nSection } from "./admin/I18nSection.js";
 import { StorageSection } from "./admin/StorageSection.js";
 import { PaymentsSection } from "./admin/PaymentsSection.js";
+import { ShoutsSection } from "./admin/ShoutsSection.js";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:8000";
 
@@ -794,6 +795,7 @@ export function App() {
                 <Route index element={<Navigate to="users" replace />} />
                 <Route path="users" element={<UsersSection />} />
                 <Route path="decks" element={<DecksSection />} />
+                <Route path="shouts" element={<ShoutsSection />} />
                 <Route path="i18n" element={<I18nSection />} />
                 <Route path="storage" element={<StorageSection />} />
                 <Route path="payments" element={<PaymentsSection />} />

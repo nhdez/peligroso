@@ -142,7 +142,7 @@ export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps
     }
   }, [G.handOver, G.handNumber, G.winner, moves]);
 
-  const { updateStats } = useAuth();
+  const { updateStats, playShoutAudio } = useAuth();
   const [statsRecorded, setStatsRecorded] = useState(false);
 
   useEffect(() => {
@@ -155,6 +155,40 @@ export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps
       updateStats(won, isAI);
     }
   }, [ctx.gameover, statsRecorded, myID, G.numPlayers, updateStats]);
+
+  // Listen to game calls to trigger MP3 audio shouts
+  const lastEnvidoRef = React.useRef<string | null>(null);
+  const lastTrucoRef = React.useRef<string | null>(null);
+
+  useEffect(() => {
+    const envidoType = G.currentEnvidoCall?.type;
+    const envidoAccepted = G.currentEnvidoCall?.accepted;
+
+    if (envidoType && envidoType !== lastEnvidoRef.current) {
+      lastEnvidoRef.current = envidoType;
+      if (envidoType === "envido") playShoutAudio("envido");
+      else if (envidoType === "real-envido") playShoutAudio("real_envido");
+      else if (envidoType === "falta-envido") playShoutAudio("falta_envido");
+    } else if (envidoAccepted !== undefined && envidoAccepted !== null) {
+      if (envidoAccepted === true) playShoutAudio("quiero");
+      else if (envidoAccepted === false) playShoutAudio("no_quiero");
+    }
+  }, [G.currentEnvidoCall, playShoutAudio]);
+
+  useEffect(() => {
+    const trucoType = G.currentTrucoCall?.type;
+    const trucoAccepted = G.currentTrucoCall?.accepted;
+
+    if (trucoType && trucoType !== lastTrucoRef.current) {
+      lastTrucoRef.current = trucoType;
+      if (trucoType === "truco") playShoutAudio("truco");
+      else if (trucoType === "retruco") playShoutAudio("retruco");
+      else if (trucoType === "vale4") playShoutAudio("vale4");
+    } else if (trucoAccepted !== undefined && trucoAccepted !== null) {
+      if (trucoAccepted === true) playShoutAudio("quiero");
+      else if (trucoAccepted === false) playShoutAudio("no_quiero");
+    }
+  }, [G.currentTrucoCall, playShoutAudio]);
 
   const player0MatUrl = profile?.custom_mat_url || PRESET_MATS[0].url;
   const player0MatOpacity = profile?.mat_opacity ?? 0.85;

@@ -75,13 +75,45 @@ export const PRESET_MATS = [
   { id: "cyber", name: "Cyber Grid Arena", url: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)" },
 ];
 
-interface AuthContextType {
+export type CallType =
+  | "envido"
+  | "real_envido"
+  | "falta_envido"
+  | "truco"
+  | "retruco"
+  | "vale4"
+  | "quiero"
+  | "no_quiero"
+  | "mazo";
+
+export interface AudioShout {
+  id: string;
+  callType: CallType;
+  title: string;
+  mp3Url: string;
+  packName?: string;
+}
+
+export const PRESET_SHOUTS: AudioShout[] = [
+  { id: "shout-envido-1", callType: "envido", title: "Grito Envido Tradicional", mp3Url: "https://actions.google.com/sounds/v1/human_voices/male_cheer.ogg", packName: "Classic Argentine Gritos" },
+  { id: "shout-real-envido-1", callType: "real_envido", title: "Real Envido Fuerte", mp3Url: "https://actions.google.com/sounds/v1/human_voices/male_yell.ogg", packName: "Classic Argentine Gritos" },
+  { id: "shout-falta-envido-1", callType: "falta_envido", title: "Falta Envido Explosivo", mp3Url: "https://actions.google.com/sounds/v1/human_voices/male_screaming_shout.ogg", packName: "Classic Argentine Gritos" },
+  { id: "shout-truco-1", callType: "truco", title: "TRUCO Clasico", mp3Url: "https://actions.google.com/sounds/v1/human_voices/male_hey.ogg", packName: "Classic Argentine Gritos" },
+  { id: "shout-retruco-1", callType: "retruco", title: "RE-TRUCO", mp3Url: "https://actions.google.com/sounds/v1/human_voices/male_yell.ogg", packName: "Classic Argentine Gritos" },
+  { id: "shout-vale4-1", callType: "vale4", title: "VALE 4", mp3Url: "https://actions.google.com/sounds/v1/human_voices/male_cheer.ogg", packName: "Classic Argentine Gritos" },
+  { id: "shout-quiero-1", callType: "quiero", title: "Quiero", mp3Url: "https://actions.google.com/sounds/v1/human_voices/male_laughter.ogg", packName: "Classic Argentine Gritos" },
+  { id: "shout-no-quiero-1", callType: "no_quiero", title: "No Quiero", mp3Url: "https://actions.google.com/sounds/v1/human_voices/male_sigh.ogg", packName: "Classic Argentine Gritos" },
+  { id: "shout-mazo-1", callType: "mazo", title: "Me voy al mazo", mp3Url: "https://actions.google.com/sounds/v1/human_voices/male_sigh.ogg", packName: "Classic Argentine Gritos" },
+];
+
+export interface AuthContextType {
   user: User | { id: string; email?: string } | null;
   profile: UserProfile | null;
   session: Session | null;
   loading: boolean;
   isConfigured: boolean;
   decks: DeckTheme[];
+  shouts: AudioShout[];
   allUsers: UserProfile[];
   signIn: (email: string, pass: string) => Promise<{ error: string | null }>;
   signUp: (email: string, pass: string, username: string) => Promise<{ error: string | null }>;
@@ -96,6 +128,10 @@ interface AuthContextType {
   createDeckTheme: (theme: Omit<DeckTheme, "id">) => void;
   updateDeckTheme: (id: string, theme: Omit<DeckTheme, "id">) => void;
   deleteDeckTheme: (id: string) => void;
+  createAudioShout: (shout: Omit<AudioShout, "id">) => void;
+  updateAudioShout: (id: string, shout: Omit<AudioShout, "id">) => void;
+  deleteAudioShout: (id: string) => void;
+  playShoutAudio: (callType: CallType) => void;
   toggleUserBan: (userId: string) => void;
   toggleUserRole: (userId: string) => void;
 }
@@ -516,6 +552,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const SHOUTS_STORAGE_KEY = "truco_custom_audio_shouts";
+
+  const [shouts, setShouts] = useState<AudioShout[]>(() => {
+    const saved = localStorage.getItem(SHOUTS_STORAGE_KEY);
+    if (saved) {
+      try { return JSON.parse(saved); } catch {}
+    }
+    return PRESET_SHOUTS;
+  });
+
+  useEffect(() => {
+    localStorage.setItem(SHOUTS_STORAGE_KEY, JSON.stringify(shouts));
+  }, [shouts]);
+
+  function createAudioShout(shout: Omit<AudioShout, "id">) {
+    const newShout: AudioShout = {
+      ...shout,
+      id: `shout-${Date.now()}`,
+    };
+    setShouts((prev) => [...prev, newShout]);
+
+    if (isSupabaseConfigured && supabase) {
+      supabase.from("audio_shouts").upsert([newShout]);
+    }
+  }
+
+  function updateAudioShout(id: string, shout: Omit<AudioShout, "id">) {
+    const updated: AudioShout = { ...shout, id };
+    setShouts((prev) => prev.map((s) => (s.id === id ? updated : s)));
+
+    if (isSupabaseConfigured && supabase) {
+      supabase.from("audio_shouts").upsert([updated]);
+    }
+  }
+
+  function deleteAudioShout(id: string) {
+    setShouts((prev) => prev.filter((s) => s.id !== id));
+    if (isSupabaseConfigured && supabase) {
+      supabase.from("audio_shouts").delete().eq("id", id);
+    }
+  }
+
+  function playShoutAudio(callType: CallType) {
+    const matching = shouts.filter((s) => s.callType === callType);
+    if (matching.length === 0) return;
+    const chosen = matching[Math.floor(Math.random() * matching.length)];
+    if (chosen?.mp3Url) {
+      try {
+        const audio = new Audio(chosen.mp3Url);
+        audio.volume = 0.85;
+        audio.play().catch(() => {});
+      } catch (e) {
+        console.error("Audio playback error:", e);
+      }
+    }
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -525,6 +618,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loading,
         isConfigured: isSupabaseConfigured,
         decks,
+        shouts,
         allUsers,
         signIn,
         signUp,
@@ -539,6 +633,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         createDeckTheme,
         updateDeckTheme,
         deleteDeckTheme,
+        createAudioShout,
+        updateAudioShout,
+        deleteAudioShout,
+        playShoutAudio,
         toggleUserBan,
         toggleUserRole,
       }}

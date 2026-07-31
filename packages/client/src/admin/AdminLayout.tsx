@@ -5,6 +5,7 @@ import { useAuth } from "../AuthContext.js";
 const SECTIONS = [
   { path: "users", label: "Manage Users" },
   { path: "decks", label: "Card Deck Themes" },
+  { path: "shouts", label: "Audio Shouts (Gritos)" },
   { path: "i18n", label: "Translations & i18n" },
   { path: "storage", label: "Object Storage" },
   { path: "payments", label: "Square Payments" },
