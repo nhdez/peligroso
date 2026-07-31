@@ -405,23 +405,6 @@ export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps
 
         {/* Center Arena Table Zone with Dynamic Custom Mat Background */}
         <main
-          onDragOver={(e) => {
-            if (canPlayCards) {
-              e.preventDefault();
-              e.dataTransfer.dropEffect = "move";
-              setIsDragOver(true);
-            }
-          }}
-          onDragLeave={() => setIsDragOver(false)}
-          onDrop={(e) => {
-            e.preventDefault();
-            setIsDragOver(false);
-            setIsDragging(false);
-            const cardId = e.dataTransfer.getData("text/plain");
-            if (cardId && canPlayCards) {
-              moves.playCard(cardId);
-            }
-          }}
           style={{
             display: "flex",
             flexDirection: "column",
@@ -488,6 +471,23 @@ export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps
 
           {/* Top Arena Mat Zone */}
           <div
+            onDragOver={(e) => {
+              if (canPlayCards) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "move";
+                setIsDragOver(true);
+              }
+            }}
+            onDragLeave={() => setIsDragOver(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setIsDragOver(false);
+              setIsDragging(false);
+              const cardId = e.dataTransfer.getData("text/plain");
+              if (cardId && canPlayCards) {
+                moves.playCard(cardId);
+              }
+            }}
             style={{
               flex: 1,
               minHeight: 0,
@@ -964,6 +964,7 @@ export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps
                         }}
                         onDrop={(e) => {
                           e.preventDefault();
+                          e.stopPropagation();
                           const fromIndexStr = e.dataTransfer.getData("fromIndex");
                           if (fromIndexStr !== "" && fromIndexStr !== null) {
                             const fromIdx = parseInt(fromIndexStr, 10);
