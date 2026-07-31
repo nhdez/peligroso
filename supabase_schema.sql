@@ -92,3 +92,23 @@ VALUES
   ('gold-royal', 'Royal Gold 24K', 'Mazo dorado con acabados reales', 'linear-gradient(135deg, #b45309 0%, #78350f 100%)'),
   ('cyber-neon', 'Cyberpunk Neon', 'Mazo futurista con efectos de neón', 'linear-gradient(135deg, #701a75 0%, #4c1d95 100%)')
 ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================================
+-- 8. SUPABASE OBJECT STORAGE BUCKET & RLS POLICIES
+-- ============================================================================
+
+-- Create public storage bucket 'peligroso-storage'
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('peligroso-storage', 'peligroso-storage', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
+
+-- Policy 1: Allow public read access to uploaded assets
+CREATE POLICY "Public Read Access for peligroso-storage"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'peligroso-storage');
+
+-- Policy 2: Allow authenticated users to upload files
+CREATE POLICY "Public & Authenticated Upload Access for peligroso-storage"
+ON storage.objects FOR INSERT
+WITH CHECK (bucket_id = 'peligroso-storage');
+

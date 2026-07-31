@@ -1,17 +1,18 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import type { ObjectStorageConfig, StorageProviderType } from "shared";
+import type { ObjectStorageConfig } from "shared";
+import { supabase } from "../supabaseClient.js";
 
 const STORAGE_CONFIG_KEY = "truco_object_storage_config";
 
 export const DEFAULT_STORAGE_CONFIG: ObjectStorageConfig = {
-  provider: "cloudflare-r2",
-  endpointUrl: "https://<account-id>.r2.cloudflarestorage.com",
-  bucketName: "truco-assets",
-  publicCdnDomain: "https://assets.truco.app",
+  provider: "supabase",
+  endpointUrl: "https://<your-project-id>.supabase.co/storage/v1",
+  bucketName: "peligroso-storage",
+  publicCdnDomain: "",
   accessKeyId: "",
   secretAccessKey: "",
   region: "auto",
-  isEnabled: false,
+  isEnabled: true,
 };
 
 interface StorageContextType {
@@ -42,21 +43,39 @@ export function StorageProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function uploadAsset(file: File, folder: "avatars" | "mats" | "decks"): Promise<string> {
-    const filename = `${folder}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+    const sanitizeName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+    const filePath = `${folder}/${Date.now()}-${sanitizeName}`;
 
-    if (storageConfig.isEnabled && storageConfig.publicCdnDomain) {
-      // Simulate Cloudflare R2 / S3 CDN URL generation
-      const cleanCdn = storageConfig.publicCdnDomain.replace(/\/$/, "");
-      return `${cleanCdn}/${filename}`;
-    } else {
-      // Local Fallback: Convert to Data URL
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = (err) => reject(err);
-        reader.readAsDataURL(file);
+    // 1. Supabase Object Storage Upload
+    if (storageConfig.isEnabled && storageConfig.provider === "supabase" && supabase) {
+      const bucketName = storageConfig.bucketName || "peligroso-storage";
+      const { data, error } = await supabase.storage.from(bucketName).upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: true,
       });
+
+      if (error) {
+        console.error("Supabase Storage upload error:", error);
+        throw new Error(`Supabase upload failed: ${error.message}`);
+      }
+
+      const { data: publicUrlData } = supabase.storage.from(bucketName).getPublicUrl(filePath);
+      return publicUrlData.publicUrl;
     }
+
+    // 2. Generic S3 / Cloudflare R2 CDN URL Generation
+    if (storageConfig.isEnabled && storageConfig.publicCdnDomain) {
+      const cleanCdn = storageConfig.publicCdnDomain.replace(/\/$/, "");
+      return `${cleanCdn}/${filePath}`;
+    }
+
+    // 3. Local Fallback: Convert file to base64 Data URL
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (err) => reject(err);
+      reader.readAsDataURL(file);
+    });
   }
 
   return (

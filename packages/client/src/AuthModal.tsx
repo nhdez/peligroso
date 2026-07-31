@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import { useAuth, PRESET_MATS, COUNTRY_LIST } from "./AuthContext.js";
+import { useStorage } from "./storage/StorageContext.js";
 
 export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { signIn, signUp, signInAsGuest, isConfigured, profile, decks, updateCustomization, updateCountry } = useAuth();
+  const { uploadAsset } = useStorage();
+  const [isUploadingMat, setIsUploadingMat] = useState(false);
   const [tab, setTab] = useState<"signin" | "signup" | "customization" | "guest">("customization");
 
   const [email, setEmail] = useState("");
@@ -48,16 +51,18 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     setLoading(false);
   }
 
-  function handleMatFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleMatFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setMatUrl(`url("${reader.result}") center/cover`);
-      }
-    };
-    reader.readAsDataURL(file);
+    setIsUploadingMat(true);
+    try {
+      const url = await uploadAsset(file, "mats");
+      setMatUrl(`url("${url}") center/cover`);
+    } catch (err: any) {
+      alert(`Mat upload failed: ${err.message}`);
+    } finally {
+      setIsUploadingMat(false);
+    }
   }
 
   return (

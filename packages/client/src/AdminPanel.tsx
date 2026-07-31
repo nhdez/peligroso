@@ -7,7 +7,8 @@ import type { StorageProviderType } from "shared";
 export function AdminPanel({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { allUsers, decks, createDeckTheme, deleteDeckTheme, toggleUserBan, toggleUserRole } = useAuth();
   const { translations, updateTranslationKey, addTranslationKey, addLanguage, availableLanguages } = useI18n();
-  const { storageConfig, saveStorageConfig } = useStorage();
+  const { storageConfig, saveStorageConfig, uploadAsset } = useStorage();
+  const [isUploading, setIsUploading] = useState(false);
 
   const [tab, setTab] = useState<"users" | "decks" | "i18n" | "storage">("users");
 
@@ -45,16 +46,18 @@ export function AdminPanel({ isOpen, onClose }: { isOpen: boolean; onClose: () =
     setCardBackUrl("");
   }
 
-  function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setCardBackUrl(reader.result);
-      }
-    };
-    reader.readAsDataURL(file);
+    setIsUploading(true);
+    try {
+      const url = await uploadAsset(file, "decks");
+      setCardBackUrl(url);
+    } catch (err: any) {
+      alert(`Upload failed: ${err.message}`);
+    } finally {
+      setIsUploading(false);
+    }
   }
 
   function handleAddTranslation(e: React.FormEvent) {
@@ -107,10 +110,10 @@ export function AdminPanel({ isOpen, onClose }: { isOpen: boolean; onClose: () =
       setStorageForm({
         provider: "supabase-storage",
         endpointUrl: "https://<project-ref>.supabase.co/storage/v1",
-        bucketName: "game-assets",
-        publicCdnDomain: "https://<project-ref>.supabase.co/storage/v1/object/public/game-assets",
-        accessKeyId: "supabase_anon_key",
-        secretAccessKey: "supabase_service_role",
+        bucketName: "peligroso-storage",
+        publicCdnDomain: "",
+        accessKeyId: "",
+        secretAccessKey: "",
         region: "auto",
         isEnabled: true,
       });
