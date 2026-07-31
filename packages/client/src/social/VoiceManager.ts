@@ -18,12 +18,21 @@ export class VoiceManager {
   private spectatorMuteMap: Map<string, boolean> = new Map();
   public muteAllSpectators: boolean = true;
 
-  public isMicMuted: boolean = false;
-  public isDeafened: boolean = false;
-  public speakingLevel: number = 0;
-  public onLevelUpdate?: (level: number) => void;
+  private stateListeners: ((states: ParticipantVoiceState[]) => void)[] = [];
 
   constructor(public matchID: string = "demo-match", public userID: string = "0") {}
+
+  onStateChange(cb: (states: ParticipantVoiceState[]) => void) {
+    this.stateListeners.push(cb);
+  }
+
+  join() {
+    this.startMicrophone();
+  }
+
+  leave() {
+    this.stop();
+  }
 
   // Mute or unmute specific spectator audio output for this player
   setSpectatorMuted(spectatorId: string, isMuted: boolean) {
@@ -114,6 +123,10 @@ export class VoiceManager {
     }
     if (this.isMicMuted) this.speakingLevel = 0;
     return this.isMicMuted;
+  }
+
+  toggleMute(): boolean {
+    return this.toggleMic();
   }
 
   toggleDeafen(): boolean {
