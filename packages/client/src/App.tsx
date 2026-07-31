@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Link } from "react-router-dom";
 import { Client } from "boardgame.io/react";
 import { TrucoGame } from "shared";
 import { TrucoBoard } from "./TrucoBoard.js";
 import { AuthModal } from "./AuthModal.js";
-import { AdminPanel } from "./AdminPanel.js";
 import { LobbyChat } from "./LobbyChat.js";
 import { Leaderboard } from "./Leaderboard.js";
 import { MatchmakingQueue } from "./MatchmakingQueue.js";
@@ -38,7 +37,6 @@ function MainApp() {
   const { t, language, setLanguage, availableLanguages } = useI18n();
 
   const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isQueueing, setIsQueueing] = useState(false);
 
   const [mode, setMode] = useState<"lobby" | "ranked-1v1" | "ai-1v1" | "ai-2v2" | "local">("lobby");
@@ -200,21 +198,21 @@ function MainApp() {
           </div>
 
           {profile?.role === "admin" && (
-            <button
-              onClick={() => setIsAdminOpen(true)}
+            <Link
+              to="/admin"
               style={{
                 padding: "6px 12px",
                 background: "#d97706",
                 color: "#ffffff",
-                border: "none",
                 borderRadius: "8px",
                 fontSize: "0.8rem",
                 fontWeight: "bold",
-                cursor: "pointer",
+                textDecoration: "none",
+                display: "inline-block",
               }}
             >
               {t("app.admin")}
-            </button>
+            </Link>
           )}
 
           <button
@@ -558,7 +556,6 @@ function MainApp() {
 
       {/* Modals */}
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
-      <AdminPanel isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
     </div>
   );
 }
