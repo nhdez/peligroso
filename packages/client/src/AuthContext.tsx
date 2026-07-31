@@ -254,7 +254,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           is_guest: false,
           role: data.role || "user",
           is_banned: data.is_banned ?? false,
-          selected_deck_id: data.selected_deck_id || "classic-gold",
+          selected_deck_id: (data.selected_deck_id === "classic-spanish" ? "classic-gold" : data.selected_deck_id) || "classic-gold",
           custom_mat_url: data.custom_mat_url || PRESET_MATS[0].url,
           mat_opacity: data.mat_opacity ?? 0.85,
           country_code: data.country_code || "AR",

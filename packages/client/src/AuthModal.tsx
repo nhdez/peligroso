@@ -42,7 +42,14 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     setLoading(true);
 
     try {
-      if (tab === "signin") {
+      if (isLoggedIn || tab === "customization") {
+        await updateCustomization(selectedDeck, matUrl, matOpacity);
+        await updateCountry(selectedCountry);
+        if (avatarUrl) {
+          await updateAvatar(avatarUrl);
+        }
+        onClose();
+      } else if (tab === "signin") {
         const res = await signIn(email, password);
         if (res.error) setError(res.error);
         else onClose();
@@ -55,13 +62,6 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         const res = await signUp(email, password, username);
         if (res.error) setError(res.error);
         else onClose();
-      } else if (tab === "customization") {
-        await updateCustomization(selectedDeck, matUrl, matOpacity);
-        await updateCountry(selectedCountry);
-        if (avatarUrl !== profile?.avatar_url) {
-          await updateAvatar(avatarUrl);
-        }
-        onClose();
       } else {
         signInAsGuest(username || undefined);
         onClose();
@@ -79,7 +79,9 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     setIsUploadingMat(true);
     try {
       const url = await uploadAsset(file, "mats");
-      setMatUrl(`url("${url}") center/cover`);
+      const formattedMat = `url("${url}") center/cover`;
+      setMatUrl(formattedMat);
+      await updateCustomization(selectedDeck, formattedMat, matOpacity);
     } catch (err: any) {
       alert(`Mat upload failed: ${err.message}`);
     } finally {
@@ -94,6 +96,7 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     try {
       const url = await uploadAsset(file, "avatars");
       setAvatarUrl(url);
+      await updateAvatar(url);
     } catch (err: any) {
       alert(`Avatar upload failed: ${err.message}`);
     } finally {
@@ -304,7 +307,11 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                 <label style={labelStyle}>🌍 Select Country (Flag Badge)</label>
                 <select
                   value={selectedCountry}
-                  onChange={(e) => setSelectedCountry(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSelectedCountry(val);
+                    updateCountry(val);
+                  }}
                   style={inputStyle}
                 >
                   {COUNTRY_LIST.map((c) => (
@@ -320,7 +327,11 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                 <label style={labelStyle}>🎴 Select Card Deck Theme</label>
                 <select
                   value={selectedDeck}
-                  onChange={(e) => setSelectedDeck(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSelectedDeck(val);
+                    updateCustomization(val, matUrl, matOpacity);
+                  }}
                   style={inputStyle}
                 >
                   {decks.map((d) => (
@@ -339,7 +350,10 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                     <button
                       key={m.id}
                       type="button"
-                      onClick={() => setMatUrl(m.url)}
+                      onClick={() => {
+                        setMatUrl(m.url);
+                        updateCustomization(selectedDeck, m.url, matOpacity);
+                      }}
                       style={{
                         padding: "10px",
                         borderRadius: "10px",
