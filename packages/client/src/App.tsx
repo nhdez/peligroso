@@ -10,6 +10,7 @@ import { LobbyChat } from "./LobbyChat.js";
 import { Leaderboard } from "./Leaderboard.js";
 import { MatchmakingQueue } from "./MatchmakingQueue.js";
 import { AuthProvider, useAuth, getCountryFlag } from "./AuthContext.js";
+import { CreditsShopModal } from "./CreditsShopModal.js";
 import { I18nProvider, useI18n } from "./i18n/I18nContext.js";
 import { StorageProvider } from "./storage/StorageContext.js";
 import { AdminLayout } from "./admin/AdminLayout.js";
@@ -160,6 +161,7 @@ function MainApp() {
   const { t, language, setLanguage, availableLanguages } = useI18n();
 
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isCreditsShopOpen, setIsCreditsShopOpen] = useState(false);
   const [isQueueing, setIsQueueing] = useState(false);
 
   const [mode, setMode] = useState<"lobby" | "ranked-1v1" | "ai-1v1" | "ai-2v2" | "local">("lobby");
@@ -327,6 +329,27 @@ function MainApp() {
             </div>
           </div>
 
+          {/* Credits Store Button */}
+          <button
+            onClick={() => setIsCreditsShopOpen(true)}
+            style={{
+              padding: "6px 14px",
+              background: "linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.2))",
+              border: "1px solid #f59e0b",
+              color: "#f59e0b",
+              borderRadius: "10px",
+              fontSize: "0.82rem",
+              fontWeight: "bold",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              boxShadow: "0 2px 8px rgba(245, 158, 11, 0.2)",
+            }}
+          >
+            <span>💎</span> {(profile?.credits ?? 1000).toLocaleString()} Credits
+          </button>
+
           {profile?.role === "admin" && (
             <Link
               to="/admin"
@@ -362,6 +385,9 @@ function MainApp() {
           </button>
         </div>
       </header>
+
+      {/* Credits Shop Modal */}
+      {isCreditsShopOpen && <CreditsShopModal onClose={() => setIsCreditsShopOpen(false)} />}
 
       {/* Real-Time 1v1 Matchmaking Queue Overlay */}
       {isQueueing && (

@@ -91,6 +91,7 @@ interface AuthContextType {
   updateCustomization: (deckId: string, matUrl: string, opacity: number) => Promise<void>;
   updateCountry: (countryCode: string) => Promise<void>;
   updateAvatar: (avatarUrl: string) => Promise<void>;
+  addCredits: (amount: number) => Promise<void>;
   createDeckTheme: (theme: Omit<DeckTheme, "id">) => void;
   updateDeckTheme: (id: string, theme: Omit<DeckTheme, "id">) => void;
   deleteDeckTheme: (id: string) => void;
@@ -231,6 +232,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       custom_mat_url: PRESET_MATS[0].url,
       mat_opacity: 0.85,
       country_code: "",
+      credits: 1000,
     };
     localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(guestProf));
     setProfile(guestProf);
@@ -263,6 +265,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           mat_opacity: data.mat_opacity ?? 0.85,
           country_code: data.country_code || "AR",
           avatar_url: data.avatar_url || "",
+          credits: data.credits ?? 1000,
         });
       } else if (error && error.code === "PGRST116") {
         const username = user.email?.split("@")[0] || `user_${user.id.slice(0, 6)}`;
@@ -280,6 +283,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           custom_mat_url: PRESET_MATS[0].url,
           mat_opacity: 0.85,
           country_code: "AR",
+          credits: 1000,
         };
         await supabase.from("profiles").insert([newProf]);
         setProfile(newProf);
@@ -412,15 +416,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await persistProfile(updated);
   }
 
-  async function updateVictoryShowcase(image: string, youtube: string, quote: string) {
+  async function addCredits(amount: number) {
     if (!profile) return;
+    const newCredits = (profile.credits || 0) + amount;
     const updated: UserProfile = {
       ...profile,
-      victory_image_url: image,
-      victory_youtube_url: youtube,
-      victory_quote: quote,
+      credits: newCredits,
     };
-    await persistProfile(updated);
+    setProfile(updated);
+    setAllUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+
+    if (updated.is_guest) {
+      localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(updated));
+    } else if (isSupabaseConfigured && supabase && updated.id) {
+      await supabase.from("profiles").update({ credits: newCredits }).eq("id", updated.id);
+    }
   }
 
   async function createDeckTheme(theme: Omit<DeckTheme, "id">) {
@@ -512,6 +522,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         updateCountry,
         updateAvatar,
         updateVictoryShowcase,
+        addCredits,
         createDeckTheme,
         updateDeckTheme,
         deleteDeckTheme,
