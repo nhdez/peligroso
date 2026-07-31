@@ -92,8 +92,11 @@ export function CreditsShopModal({ onClose }: { onClose: () => void }) {
         {/* Header Bar */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: "1.4rem", color: "#f59e0b", fontWeight: "bold" }}>
-              💳 Credits Store
+            <div style={{ fontSize: "0.7rem", color: "#f59e0b", textTransform: "uppercase", letterSpacing: "1px", fontWeight: "bold" }}>
+              COMPETITIVE STORE
+            </div>
+            <h2 style={{ margin: "2px 0 0 0", fontSize: "1.4rem", color: "#f8fafc", fontWeight: "bold" }}>
+              Credits Store
             </h2>
             <div style={{ fontSize: "0.8rem", color: "#94a3b8", marginTop: "2px" }}>
               Conversion Rate: <strong>$1.00 USD = 1,000 Credits</strong>
@@ -135,7 +138,7 @@ export function CreditsShopModal({ onClose }: { onClose: () => void }) {
               Your Current Balance
             </div>
             <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#f59e0b", marginTop: "2px" }}>
-              💎 {(profile?.credits ?? 1000).toLocaleString()} <span style={{ fontSize: "0.85rem", color: "#cbd5e1" }}>Credits</span>
+              {(profile?.credits ?? 1000).toLocaleString()} <span style={{ fontSize: "0.85rem", color: "#cbd5e1" }}>Credits</span>
             </div>
           </div>
           <div style={{ fontSize: "0.75rem", color: "#60a5fa", background: "rgba(37, 99, 235, 0.2)", padding: "4px 10px", borderRadius: "8px" }}>
@@ -225,7 +228,7 @@ export function CreditsShopModal({ onClose }: { onClose: () => void }) {
                     {pack.name}
                   </div>
                   <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#f59e0b", margin: "4px 0" }}>
-                    💎 {pack.credits.toLocaleString()}
+                    {pack.credits.toLocaleString()} Credits
                   </div>
                   <div style={{ fontSize: "0.8rem", color: "#94a3b8" }}>
                     ${pack.usdAmount.toFixed(2)} USD
@@ -266,7 +269,7 @@ export function CreditsShopModal({ onClose }: { onClose: () => void }) {
               />
             </div>
             <div style={{ fontSize: "0.85rem", color: "#f59e0b", fontWeight: "bold" }}>
-              = 💎 {totalCredits.toLocaleString()} Credits
+              = {totalCredits.toLocaleString()} Credits
             </div>
           </div>
         </div>

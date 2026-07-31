@@ -3,11 +3,11 @@ import { Navigate, NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../AuthContext.js";
 
 const SECTIONS = [
-  { path: "users", label: "👥 Manage Users" },
-  { path: "decks", label: "🎴 Card Deck Themes" },
-  { path: "i18n", label: "🌐 Translations & i18n" },
-  { path: "storage", label: "📦 Object Storage" },
-  { path: "payments", label: "💳 Payments" },
+  { path: "users", label: "Manage Users" },
+  { path: "decks", label: "Card Deck Themes" },
+  { path: "i18n", label: "Translations & i18n" },
+  { path: "storage", label: "Object Storage" },
+  { path: "payments", label: "Square Payments" },
 ];
 
 export function AdminLayout() {
@@ -49,12 +49,10 @@ export function AdminLayout() {
             margin: "0 0 20px 0",
             color: "#f59e0b",
             fontSize: "1.2rem",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
+            fontWeight: "bold",
           }}
         >
-          🛡️ Admin Console
+          Admin Console
         </h2>
 
         {SECTIONS.map((s) => (

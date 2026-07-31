@@ -116,15 +116,15 @@ export function LobbyChat() {
     }
   }
 
-  const QUICK_EMOJIS = ["🃏", "🔥", "👏", "😜", "👑", "💥"];
+  const QUICK_REACTIONS = ["GG", "GL", "Truco!", "Envido!", "Quiero", "Mazo"];
 
   return (
     <div
       style={{
-        background: "rgba(30, 41, 59, 0.75)",
-        backdropFilter: "blur(12px)",
+        background: "rgba(15, 23, 42, 0.8)",
+        backdropFilter: "blur(16px)",
         borderRadius: "20px",
-        border: "1px solid rgba(255, 255, 255, 0.1)",
+        border: "1px solid rgba(255, 255, 255, 0.08)",
         padding: "20px",
         display: "flex",
         flexDirection: "column",
@@ -132,9 +132,16 @@ export function LobbyChat() {
         boxSizing: "border-box",
       }}
     >
-      <h3 style={{ margin: "0 0 14px 0", color: "#f59e0b", fontSize: "1.1rem", display: "flex", alignItems: "center", gap: "8px" }}>
-        💬 Global Lobby Chat
-      </h3>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
+        <div>
+          <div style={{ fontSize: "0.7rem", color: "#f59e0b", textTransform: "uppercase", letterSpacing: "1px", fontWeight: "bold" }}>
+            LOBBY COMMUNICATIONS
+          </div>
+          <h3 style={{ margin: "2px 0 0 0", color: "#f8fafc", fontSize: "1.1rem", fontWeight: "bold" }}>
+            Global Lobby Chat
+          </h3>
+        </div>
+      </div>
 
       {/* Messages Feed */}
       <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "8px", paddingRight: "4px" }}>
@@ -166,23 +173,25 @@ export function LobbyChat() {
         <div ref={chatEndRef} />
       </div>
 
-      {/* Quick Emoji Bar */}
-      <div style={{ display: "flex", gap: "6px", margin: "10px 0 6px 0", justifyContent: "center" }}>
-        {QUICK_EMOJIS.map((emoji) => (
+      {/* Quick Reaction Pills */}
+      <div style={{ display: "flex", gap: "6px", margin: "10px 0 6px 0", justifyContent: "center", flexWrap: "wrap" }}>
+        {QUICK_REACTIONS.map((msg) => (
           <button
-            key={emoji}
+            key={msg}
             type="button"
-            onClick={() => handleSendMessage(undefined, emoji)}
+            onClick={() => handleSendMessage(undefined, msg)}
             style={{
               background: "rgba(255,255,255,0.06)",
-              border: "none",
+              border: "1px solid rgba(255,255,255,0.1)",
               borderRadius: "6px",
-              padding: "4px 8px",
-              fontSize: "0.95rem",
+              padding: "3px 8px",
+              fontSize: "0.75rem",
+              color: "#cbd5e1",
+              fontWeight: "bold",
               cursor: "pointer",
             }}
           >
-            {emoji}
+            {msg}
           </button>
         ))}
       </div>

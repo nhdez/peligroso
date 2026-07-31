@@ -189,15 +189,18 @@ export function MatchmakingQueue({ onMatchFound, onCancel, onSwitchToAI }: Match
           />
           <div
             style={{
-              fontSize: "2.4rem",
+              fontSize: "1.4rem",
               lineHeight: "100px",
+              fontWeight: "bold",
+              color: "#f59e0b",
+              letterSpacing: "2px",
             }}
           >
-            ⚔️
+            1v1
           </div>
         </div>
 
-        <h2 style={{ margin: "0 0 8px 0", color: "#f59e0b", fontSize: "1.4rem" }}>
+        <h2 style={{ margin: "0 0 8px 0", color: "#f59e0b", fontSize: "1.4rem", fontWeight: "bold" }}>
           1v1 Ranked Matchmaking
         </h2>
 
@@ -232,7 +235,7 @@ export function MatchmakingQueue({ onMatchFound, onCancel, onSwitchToAI }: Match
             onClick={onSwitchToAI}
             style={{
               padding: "12px",
-              background: "linear-gradient(135deg, #059669 0%, #047857 100%)",
+              background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
               color: "#ffffff",
               border: "none",
               borderRadius: "12px",
@@ -241,7 +244,7 @@ export function MatchmakingQueue({ onMatchFound, onCancel, onSwitchToAI }: Match
               cursor: "pointer",
             }}
           >
-            🤖 Play vs AI Bot Immediately
+            Play vs AI Bot Immediately
           </button>
 
           <button
@@ -257,7 +260,7 @@ export function MatchmakingQueue({ onMatchFound, onCancel, onSwitchToAI }: Match
               cursor: "pointer",
             }}
           >
-            ✕ Cancel Search & Return to Lobby
+            Cancel Search & Return to Lobby
           </button>
         </div>
       </div>

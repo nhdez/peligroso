@@ -29,10 +29,15 @@ export function Leaderboard() {
       }}
     >
       {/* Title & Tabs */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-        <h3 style={{ margin: 0, color: "#f59e0b", fontSize: "1.1rem", display: "flex", alignItems: "center", gap: "8px" }}>
-          🏆 Leaderboard
-        </h3>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
+        <div>
+          <div style={{ fontSize: "0.7rem", color: "#f59e0b", textTransform: "uppercase", letterSpacing: "1px", fontWeight: "bold" }}>
+            COMPETITIVE STANDINGS
+          </div>
+          <h3 style={{ margin: "2px 0 0 0", color: "#f8fafc", fontSize: "1.1rem", fontWeight: "bold" }}>
+            Global Leaderboard
+          </h3>
+        </div>
 
         <div style={{ display: "flex", gap: "6px" }}>
           <button
@@ -48,7 +53,7 @@ export function Leaderboard() {
               cursor: "pointer",
             }}
           >
-            All-Time ELO
+            ELO Rating
           </button>
           <button
             onClick={() => setTab("weekly")}
@@ -56,14 +61,14 @@ export function Leaderboard() {
               padding: "4px 10px",
               borderRadius: "8px",
               border: "none",
-              background: tab === "weekly" ? "#d97706" : "rgba(255,255,255,0.06)",
+              background: tab === "weekly" ? "#2563eb" : "rgba(255,255,255,0.06)",
               color: tab === "weekly" ? "#ffffff" : "#94a3b8",
               fontWeight: "bold",
               fontSize: "0.75rem",
               cursor: "pointer",
             }}
           >
-            🔥 Weekly
+            Wins
           </button>
         </div>
       </div>
@@ -80,8 +85,8 @@ export function Leaderboard() {
               u.matches_played > 0
                 ? Math.round((u.matches_won / u.matches_played) * 100)
                 : 0;
-            const rankBadge =
-              idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${idx + 1}`;
+            const rankLabel = `#${idx + 1}`;
+            const isTop3 = idx < 3;
 
             return (
               <div
@@ -92,28 +97,29 @@ export function Leaderboard() {
                   justifyContent: "space-between",
                   background:
                     idx === 0
-                      ? "linear-gradient(90deg, rgba(245, 158, 11, 0.2), rgba(15, 23, 42, 0.6))"
+                      ? "linear-gradient(90deg, rgba(245, 158, 11, 0.15), rgba(15, 23, 42, 0.6))"
                       : "rgba(15, 23, 42, 0.5)",
                   border:
                     idx === 0
-                      ? "1px solid rgba(245, 158, 11, 0.4)"
+                      ? "1px solid rgba(245, 158, 11, 0.3)"
                       : "1px solid rgba(255, 255, 255, 0.06)",
                   borderRadius: "12px",
                   padding: "8px 12px",
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <span style={{ fontSize: "1rem", fontWeight: "bold", width: "24px" }}>
-                    {rankBadge}
+                  <span style={{ fontSize: "0.8rem", fontWeight: "bold", width: "24px", color: isTop3 ? "#f59e0b" : "#94a3b8" }}>
+                    {rankLabel}
                   </span>
                   {getCountryFlag(u.country_code, u.is_guest) ? (
-                    <span style={{ fontSize: "1.2rem" }} title={u.country_code || ""}>
+                    <span style={{ fontSize: "1rem" }} title={u.country_code || ""}>
                       {getCountryFlag(u.country_code, u.is_guest)}
                     </span>
                   ) : null}
                   <div>
-                    <div style={{ fontWeight: "bold", fontSize: "0.85rem", color: "#f8fafc" }}>
-                      {u.username} {u.role === "admin" && <span style={{ color: "#f59e0b", fontSize: "0.7rem" }}>🛡️</span>}
+                    <div style={{ fontWeight: "bold", fontSize: "0.85rem", color: "#f8fafc", display: "flex", alignItems: "center", gap: "6px" }}>
+                      <span>{u.username}</span>
+                      {u.role === "admin" && <span style={{ color: "#f59e0b", fontSize: "0.6rem", padding: "1px 4px", borderRadius: "4px", background: "rgba(245, 158, 11, 0.2)", border: "1px solid #f59e0b" }}>ADMIN</span>}
                     </div>
                     <div style={{ fontSize: "0.7rem", color: "#94a3b8" }}>
                       {u.matches_won}W / {u.matches_played}P ({winRate}% Win Rate)

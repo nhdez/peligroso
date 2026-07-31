@@ -512,7 +512,7 @@ function MainApp() {
         </div>
       )}
 
-      {/* Main Lobby Dashboard: 3-Column Grid */}
+      {/* Main Esports Lobby Dashboard: 3-Column Grid */}
       <div
         style={{
           width: "100%",
@@ -523,216 +523,232 @@ function MainApp() {
           alignItems: "stretch",
         }}
       >
-          {/* Left Column: Game Modes & Match Setup */}
-          <div
-            style={{
-              background: "rgba(30, 41, 59, 0.75)",
-              backdropFilter: "blur(12px)",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
-              borderRadius: "20px",
-              padding: "24px",
-              boxShadow: "0 16px 36px rgba(0,0,0,0.5)",
-              display: "flex",
-              flexDirection: "column",
-              gap: "16px",
-            }}
-          >
-            <div>
-              <h2 style={{ margin: "0 0 4px 0", fontSize: "1.3rem", color: "#f59e0b" }}>
-                🎮 Select Game Mode
-              </h2>
-              <p style={{ margin: 0, color: "#94a3b8", fontSize: "0.85rem" }}>
-                {t("app.subtitle")}
-              </p>
+        {/* Left Column: Match Center */}
+        <div
+          style={{
+            background: "rgba(15, 23, 42, 0.8)",
+            backdropFilter: "blur(16px)",
+            border: "1px solid rgba(255, 255, 255, 0.08)",
+            borderRadius: "20px",
+            padding: "24px",
+            boxShadow: "0 16px 36px rgba(0,0,0,0.5)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "18px",
+          }}
+        >
+          <div>
+            <div style={{ fontSize: "0.75rem", color: "#f59e0b", textTransform: "uppercase", letterSpacing: "1.5px", fontWeight: "bold" }}>
+              MATCH CENTER
             </div>
+            <h2 style={{ margin: "2px 0 0 0", fontSize: "1.25rem", color: "#f8fafc", fontWeight: "bold" }}>
+              Competitive Arenas
+            </h2>
+          </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              {/* 1v1 Multiplayer Matchmaking Queue (Primary Mode) */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+            {/* Primary Action: Ranked 1v1 Queue Card */}
+            <div
+              style={{
+                background: "linear-gradient(135deg, rgba(30, 58, 138, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%)",
+                border: "1px solid rgba(59, 130, 246, 0.4)",
+                borderRadius: "16px",
+                padding: "18px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "12px",
+                boxShadow: "0 8px 24px rgba(37, 99, 235, 0.2)",
+              }}
+            >
+              <div>
+                <span style={{ background: "#2563eb", color: "#ffffff", fontSize: "0.65rem", padding: "2px 8px", borderRadius: "6px", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                  PRIMARY MODE
+                </span>
+                <div style={{ fontSize: "1.1rem", fontWeight: "bold", color: "#ffffff", marginTop: "6px" }}>
+                  Ranked 1v1 Matchmaking
+                </div>
+                <div style={{ fontSize: "0.78rem", color: "#94a3b8", marginTop: "2px" }}>
+                  Official ELO Rating Competitive Queue
+                </div>
+              </div>
+
               <button
                 onClick={handleStartRankedQueue}
                 style={{
-                  padding: "16px 18px",
+                  padding: "12px 16px",
                   background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
                   color: "#ffffff",
                   border: "none",
-                  borderRadius: "14px",
-                  fontWeight: "bold",
-                  fontSize: "1.05rem",
-                  cursor: "pointer",
-                  boxShadow: "0 6px 18px rgba(245, 158, 11, 0.4)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "10px",
-                }}
-              >
-                ⚔️ Play 1v1 vs Real Player (Queue)
-              </button>
-
-              {/* 1v1 AI Solo Practice Mode */}
-              <button
-                onClick={() => {
-                  setActiveMatchID("demo-ai-match");
-                  setPlayerID("0");
-                  setMode("ai-1v1");
-                }}
-                style={{
-                  padding: "14px 18px",
-                  background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
-                  color: "#ffffff",
-                  border: "none",
-                  borderRadius: "14px",
+                  borderRadius: "10px",
                   fontWeight: "bold",
                   fontSize: "0.95rem",
                   cursor: "pointer",
-                  boxShadow: "0 4px 14px rgba(37, 99, 235, 0.4)",
+                  boxShadow: "0 4px 14px rgba(245, 158, 11, 0.3)",
+                  letterSpacing: "0.5px",
                 }}
               >
-                🤖 Practice 1v1 vs AI Bot (Solo)
+                ENTER QUEUE
               </button>
-
-              {/* 2v2 AI Mode (4 Players) */}
-              <button
-                onClick={() => {
-                  setActiveMatchID("demo-2v2-match");
-                  setPlayerID("0");
-                  setMode("ai-2v2");
-                }}
-                style={{
-                  padding: "14px 18px",
-                  background: "linear-gradient(135deg, #059669 0%, #047857 100%)",
-                  color: "#ffffff",
-                  border: "none",
-                  borderRadius: "14px",
-                  fontWeight: "bold",
-                  fontSize: "0.95rem",
-                  cursor: "pointer",
-                  boxShadow: "0 4px 14px rgba(5, 150, 105, 0.4)",
-                }}
-              >
-                👥 2v2 Team Match (4 Players)
-              </button>
-
-              {/* Local 4-Player Pass & Play */}
-              <div
-                style={{
-                  background: "rgba(15, 23, 42, 0.5)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  borderRadius: "14px",
-                  padding: "14px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "8px",
-                }}
-              >
-                <div style={{ fontWeight: 600, fontSize: "0.85rem", color: "#e2e8f0" }}>
-                  👥 Local 2v2 (Pass & Play Seats)
-                </div>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
-                  <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>Seat:</span>
-                  <select
-                    value={playerID}
-                    onChange={(e) => setPlayerID(e.target.value)}
-                    style={{
-                      padding: "4px 8px",
-                      borderRadius: "6px",
-                      background: "#0f172a",
-                      color: "#f8fafc",
-                      border: "1px solid rgba(255,255,255,0.2)",
-                      fontSize: "0.75rem",
-                    }}
-                  >
-                    <option value="0">P0 (Team 0)</option>
-                    <option value="1">P1 (Team 1)</option>
-                    <option value="2">P2 (Team 0)</option>
-                    <option value="3">P3 (Team 1)</option>
-                  </select>
-                </div>
-                <button
-                  onClick={() => setMode("local")}
-                  style={{
-                    padding: "8px 14px",
-                    background: "#475569",
-                    color: "#ffffff",
-                    border: "none",
-                    borderRadius: "8px",
-                    fontWeight: "bold",
-                    cursor: "pointer",
-                    fontSize: "0.8rem",
-                  }}
-                >
-                  Start 2v2 Local Match
-                </button>
-              </div>
             </div>
 
-            {/* Leaderboard Preview Card */}
-            <Leaderboard />
-          </div>
+            {/* Solo Practice vs AI */}
+            <button
+              onClick={() => {
+                setActiveMatchID("demo-ai-match");
+                setPlayerID("0");
+                setMode("ai-1v1");
+              }}
+              style={{
+                padding: "14px 18px",
+                background: "rgba(30, 41, 59, 0.8)",
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+                color: "#f8fafc",
+                borderRadius: "12px",
+                fontWeight: "bold",
+                fontSize: "0.9rem",
+                cursor: "pointer",
+                textAlign: "left",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <span>1v1 Practice vs AI Bot</span>
+              <span style={{ fontSize: "0.75rem", color: "#60a5fa" }}>SOLO →</span>
+            </button>
 
-          {/* Middle Column: Live Global Lobby Chat */}
-          <div style={{ height: "640px" }}>
-            <LobbyChat />
-          </div>
+            {/* 2v2 Team Match */}
+            <button
+              onClick={() => {
+                setActiveMatchID("demo-2v2-match");
+                setPlayerID("0");
+                setMode("ai-2v2");
+              }}
+              style={{
+                padding: "14px 18px",
+                background: "rgba(30, 41, 59, 0.8)",
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+                color: "#f8fafc",
+                borderRadius: "12px",
+                fontWeight: "bold",
+                fontSize: "0.9rem",
+                cursor: "pointer",
+                textAlign: "left",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <span>2v2 Team Match (4 Players)</span>
+              <span style={{ fontSize: "0.75rem", color: "#4ade80" }}>TEAMS →</span>
+            </button>
 
-          {/* Right Column: Player Profile & Quick Customization */}
+            {/* Local Pass & Play Card */}
+            <div
+              style={{
+                background: "rgba(15, 23, 42, 0.6)",
+                border: "1px solid rgba(255,255,255,0.06)",
+                borderRadius: "12px",
+                padding: "14px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "10px",
+              }}
+            >
+              <div style={{ fontWeight: "bold", fontSize: "0.85rem", color: "#cbd5e1" }}>
+                Local 2v2 Pass & Play
+              </div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ fontSize: "0.78rem", color: "#94a3b8" }}>Select Seat:</span>
+                <select
+                  value={playerID}
+                  onChange={(e) => setPlayerID(e.target.value)}
+                  style={{
+                    padding: "4px 8px",
+                    borderRadius: "6px",
+                    background: "#0f172a",
+                    color: "#f8fafc",
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    fontSize: "0.75rem",
+                  }}
+                >
+                  <option value="0">Seat P0 (Team 0)</option>
+                  <option value="1">Seat P1 (Team 1)</option>
+                  <option value="2">Seat P2 (Team 0)</option>
+                  <option value="3">Seat P3 (Team 1)</option>
+                </select>
+              </div>
+              <button
+                onClick={() => setMode("local")}
+                style={{
+                  padding: "8px 12px",
+                  background: "#334155",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                  fontSize: "0.8rem",
+                }}
+              >
+                Start Local Game
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Middle Column: Live Global Lobby Chat */}
+        <div style={{ height: "640px" }}>
+          <LobbyChat />
+        </div>
+
+        {/* Right Column: Player Profile & Global Standings */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "20px",
+          }}
+        >
+          {/* Player Profile Card */}
           <div
             style={{
-              background: "rgba(30, 41, 59, 0.75)",
-              backdropFilter: "blur(12px)",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
+              background: "rgba(15, 23, 42, 0.8)",
+              backdropFilter: "blur(16px)",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
               borderRadius: "20px",
-              padding: "24px",
+              padding: "20px",
               boxShadow: "0 16px 36px rgba(0,0,0,0.5)",
               display: "flex",
               flexDirection: "column",
-              gap: "16px",
+              gap: "14px",
             }}
           >
-            <div>
-              <h3 style={{ margin: "0 0 4px 0", color: "#f59e0b", fontSize: "1.1rem" }}>
-                👤 Your Player Profile
-              </h3>
-              <div style={{ fontSize: "0.8rem", color: "#cbd5e1" }}>
-                {profile?.is_guest ? "Logged in as Guest" : "Authenticated Player"}
-              </div>
-            </div>
-
-            <div style={{ background: "rgba(15, 23, 42, 0.6)", borderRadius: "14px", padding: "16px", display: "flex", alignItems: "center", gap: "14px" }}>
-              <div
-                style={{
-                  width: "52px",
-                  height: "52px",
-                  borderRadius: "50%",
-                  overflow: "hidden",
-                  background: "#1e293b",
-                  border: "2px solid #f59e0b",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "1.3rem",
-                  fontWeight: "bold",
-                  color: "#f59e0b",
-                  flexShrink: 0,
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
-                }}
-              >
-                {profile?.avatar_url ? (
-                  <img src={profile.avatar_url} alt={profile.username} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                ) : (
-                  (profile?.username || "G").charAt(0).toUpperCase()
-                )}
-              </div>
-
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
-                <div style={{ fontSize: "1.1rem", fontWeight: "bold", color: "#60a5fa" }}>
+                <div style={{ fontSize: "0.7rem", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "1px", fontWeight: "bold" }}>
+                  PLAYER DOSSIER
+                </div>
+                <div style={{ fontSize: "1.1rem", fontWeight: "bold", color: "#60a5fa", marginTop: "2px" }}>
                   {getCountryFlag(profile?.country_code, profile?.is_guest)} {profile?.username || "Guest"}
                 </div>
-                <div style={{ fontSize: "0.8rem", color: "#94a3b8", marginTop: "2px" }}>
-                  ELO Rating: <strong style={{ color: "#f59e0b" }}>{profile?.elo_rating ?? 1200}</strong>
+              </div>
+              <span style={{ fontSize: "0.7rem", background: "rgba(245, 158, 11, 0.2)", border: "1px solid #f59e0b", color: "#f59e0b", padding: "2px 8px", borderRadius: "6px", fontWeight: "bold" }}>
+                {profile?.role === "admin" ? "ADMIN" : "PLAYER"}
+              </span>
+            </div>
+
+            <div style={{ background: "rgba(30, 41, 59, 0.6)", borderRadius: "12px", padding: "12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>ELO Rating</div>
+                <div style={{ fontSize: "1.3rem", fontWeight: "bold", color: "#f59e0b", marginTop: "2px" }}>
+                  {profile?.elo_rating ?? 1200}
                 </div>
-                <div style={{ fontSize: "0.8rem", color: "#94a3b8" }}>
-                  Matches Won: {profile?.matches_won ?? 0} / {profile?.matches_played ?? 0}
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>W / L Record</div>
+                <div style={{ fontSize: "0.95rem", fontWeight: "bold", color: "#4ade80", marginTop: "2px" }}>
+                  {profile?.matches_won ?? 0} W / {((profile?.matches_played ?? 0) - (profile?.matches_won ?? 0))} L
                 </div>
               </div>
             </div>
@@ -750,10 +766,16 @@ function MainApp() {
                 fontSize: "0.85rem",
               }}
             >
-              🎨 Customize Deck, Mat & Flag
+              Account Customization
             </button>
           </div>
+
+          {/* Global Leaderboard Standings */}
+          <div style={{ flex: 1 }}>
+            <Leaderboard />
+          </div>
         </div>
+      </div>
 
       {/* Modals */}
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
