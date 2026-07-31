@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build:shared": "npm run build --workspace=shared",
+    "prebuild": "npm run build:shared",
     "build": "vite build",
     "preview": "vite preview"
   },
