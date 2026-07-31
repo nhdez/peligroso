@@ -1,3 +1,7 @@
+import React, { useState, useEffect } from "react";
+import { useAuth, getCountryFlag } from "./AuthContext.js";
+import { supabase, isSupabaseConfigured } from "./supabaseClient.js";
+
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:8000";
 
 interface MatchmakingQueueProps {
