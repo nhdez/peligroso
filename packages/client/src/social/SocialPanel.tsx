@@ -16,27 +16,6 @@ export interface ChatMessage {
   timestamp: string;
 }
 
-const DEFAULT_GAME_MESSAGES: ChatMessage[] = [
-  {
-    id: "m-1",
-    senderId: "0",
-    senderName: "Player 0",
-    countryCode: "AR",
-    role: "player",
-    text: "¡Buenas! ¡Suerte y que gane el mejor! 🃏",
-    timestamp: "12:00",
-  },
-  {
-    id: "m-2",
-    senderId: "1",
-    senderName: "Player 1 (AI)",
-    countryCode: "UY",
-    role: "player",
-    text: "¡A ver qué sale! 🔥",
-    timestamp: "12:01",
-  },
-];
-
 export function SocialPanel({
   myID,
   matchID = "demo-match",
@@ -80,7 +59,7 @@ export function SocialPanel({
   ]);
 
   // Chat Messages State
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(DEFAULT_GAME_MESSAGES);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState("");
   const chatEndRef = useRef<HTMLDivElement | null>(null);
 

@@ -11,36 +11,9 @@ export interface LobbyMessage {
   timestamp: string;
 }
 
-const DEFAULT_LOBBY_MESSAGES: LobbyMessage[] = [
-  {
-    id: "l-1",
-    senderName: "ElGaucho_AR",
-    countryCode: "AR",
-    role: "user",
-    text: "¡Buenas a todos! ¿Quién sale para un 2v2 en Peligroso? 🃏",
-    timestamp: "12:50",
-  },
-  {
-    id: "l-2",
-    senderName: "ElMate_UY",
-    countryCode: "UY",
-    role: "user",
-    text: "¡Me sumo de compañero! 🇺🇾",
-    timestamp: "12:51",
-  },
-  {
-    id: "l-3",
-    senderName: "TrucoMaster_ES",
-    countryCode: "ES",
-    role: "admin",
-    text: "¡Bienvenidos al Lobby Global de Peligroso! 🏆",
-    timestamp: "12:55",
-  },
-];
-
 export function LobbyChat() {
   const { profile } = useAuth();
-  const [messages, setMessages] = useState<LobbyMessage[]>(DEFAULT_LOBBY_MESSAGES);
+  const [messages, setMessages] = useState<LobbyMessage[]>([]);
   const [inputText, setInputText] = useState("");
   const chatEndRef = useRef<HTMLDivElement | null>(null);
 
