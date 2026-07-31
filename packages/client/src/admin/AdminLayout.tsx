@@ -19,8 +19,10 @@ export function AdminLayout() {
   return (
     <div
       style={{
-        minHeight: "100vh",
+        width: "100vw",
+        height: "100vh",
         display: "flex",
+        overflow: "hidden",
         background: "radial-gradient(circle at top center, #0f172a 0%, #020617 100%)",
         color: "#f8fafc",
         fontFamily: "'Segoe UI', Roboto, sans-serif",
@@ -29,13 +31,17 @@ export function AdminLayout() {
       <aside
         style={{
           width: "260px",
+          height: "100vh",
           flexShrink: 0,
-          background: "rgba(15, 23, 42, 0.9)",
+          background: "rgba(15, 23, 42, 0.95)",
+          backdropFilter: "blur(12px)",
           borderRight: "1px solid rgba(255,255,255,0.1)",
           padding: "24px 16px",
           display: "flex",
           flexDirection: "column",
           gap: "6px",
+          boxSizing: "border-box",
+          overflowY: "auto",
         }}
       >
         <h2
@@ -85,7 +91,15 @@ export function AdminLayout() {
         </NavLink>
       </aside>
 
-      <main style={{ flex: 1, padding: "32px", overflowY: "auto" }}>
+      <main
+        style={{
+          flex: 1,
+          height: "100vh",
+          overflowY: "auto",
+          padding: "32px",
+          boxSizing: "border-box",
+        }}
+      >
         <Outlet />
       </main>
     </div>
