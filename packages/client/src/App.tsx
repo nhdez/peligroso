@@ -4,11 +4,13 @@ import { Client } from "boardgame.io/react";
 import { SocketIO, Local } from "boardgame.io/multiplayer";
 import { TrucoGame, getBotMove } from "shared";
 import { TrucoBoard } from "./TrucoBoard.js";
-import { AuthProvider, useAuth } from "./AuthContext.js";
+import { AuthProvider, useAuth, getCountryFlag } from "./AuthContext.js";
 import { AuthModal } from "./AuthModal.js";
 import { AdminPanel } from "./AdminPanel.js";
 import { I18nProvider, useI18n } from "./i18n/I18nContext.js";
 import { StorageProvider } from "./storage/StorageContext.js";
+import { LobbyChat } from "./LobbyChat.js";
+import { Leaderboard } from "./Leaderboard.js";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:8000";
 
@@ -295,67 +297,95 @@ function MainApp() {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        justifyContent: "center",
         padding: "24px",
-        position: "relative",
+        boxSizing: "border-box",
       }}
     >
-      {/* Top Profile & Language Selector Header Bar */}
-      <div
+      {/* Top Header & Navigation Bar */}
+      <header
         style={{
-          position: "absolute",
-          top: "20px",
-          right: "24px",
+          width: "100%",
+          maxWidth: "1280px",
           display: "flex",
+          justifyContent: "space-between",
           alignItems: "center",
-          gap: "12px",
-          background: "rgba(30, 41, 59, 0.8)",
-          backdropFilter: "blur(8px)",
-          padding: "8px 16px",
-          borderRadius: "16px",
+          background: "rgba(15, 23, 42, 0.85)",
+          backdropFilter: "blur(12px)",
+          padding: "14px 24px",
+          borderRadius: "20px",
           border: "1px solid rgba(255, 255, 255, 0.1)",
+          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4)",
+          marginBottom: "24px",
         }}
       >
-        <select
-          value={language}
-          onChange={(e) => setLanguage(e.target.value)}
-          style={{
-            padding: "6px 10px",
-            borderRadius: "8px",
-            background: "#0f172a",
-            color: "#f59e0b",
-            border: "1px solid rgba(255,255,255,0.2)",
-            fontWeight: "bold",
-            fontSize: "0.85rem",
-            cursor: "pointer",
-          }}
-        >
-          <option value="es">🇪🇸 Español</option>
-          <option value="en">🇬🇧 English</option>
-          {availableLanguages
-            .filter((l) => l !== "es" && l !== "en")
-            .map((l) => (
-              <option key={l} value={l}>
-                🌐 {l.toUpperCase()}
-              </option>
-            ))}
-        </select>
-
-        <div style={{ textAlign: "right" }}>
-          <div style={{ fontSize: "0.9rem", fontWeight: "bold", color: "#f59e0b" }}>
-            👤 {profile?.username || "Guest"} {profile?.role === "admin" && "🛡️"}
-          </div>
-          <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
-            ELO: <strong style={{ color: "#60a5fa" }}>{profile?.elo_rating ?? 1200}</strong> | W/L: {profile?.matches_won ?? 0}/{profile?.matches_played ?? 0}
-          </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <h1 style={{ margin: 0, fontSize: "1.6rem", color: "#f59e0b", letterSpacing: "1px" }}>
+            {t("app.title")}
+          </h1>
+          <span style={{ fontSize: "1.2rem" }}>{getCountryFlag(profile?.country_code)}</span>
         </div>
 
-        {profile?.role === "admin" && (
+        {/* Right Header Controls */}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          {/* Language Selector */}
+          <select
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+            style={{
+              padding: "6px 10px",
+              borderRadius: "8px",
+              background: "#0f172a",
+              color: "#f59e0b",
+              border: "1px solid rgba(255,255,255,0.2)",
+              fontWeight: "bold",
+              fontSize: "0.85rem",
+              cursor: "pointer",
+            }}
+          >
+            <option value="es">🇪🇸 Español</option>
+            <option value="en">🇬🇧 English</option>
+            {availableLanguages
+              .filter((l) => l !== "es" && l !== "en")
+              .map((l) => (
+                <option key={l} value={l}>
+                  🌐 {l.toUpperCase()}
+                </option>
+              ))}
+          </select>
+
+          {/* User Profile Badge */}
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: "0.9rem", fontWeight: "bold", color: "#f59e0b" }}>
+              {getCountryFlag(profile?.country_code)} {profile?.username || "Guest"} {profile?.role === "admin" && "🛡️"}
+            </div>
+            <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
+              ELO: <strong style={{ color: "#60a5fa" }}>{profile?.elo_rating ?? 1200}</strong> | W/L: {profile?.matches_won ?? 0}/{profile?.matches_played ?? 0}
+            </div>
+          </div>
+
+          {profile?.role === "admin" && (
+            <button
+              onClick={() => setIsAdminOpen(true)}
+              style={{
+                padding: "6px 12px",
+                background: "#d97706",
+                color: "#ffffff",
+                border: "none",
+                borderRadius: "8px",
+                fontSize: "0.8rem",
+                fontWeight: "bold",
+                cursor: "pointer",
+              }}
+            >
+              {t("app.admin")}
+            </button>
+          )}
+
           <button
-            onClick={() => setIsAdminOpen(true)}
+            onClick={() => setIsAuthOpen(true)}
             style={{
               padding: "6px 12px",
-              background: "#d97706",
+              background: "#2563eb",
               color: "#ffffff",
               border: "none",
               borderRadius: "8px",
@@ -364,184 +394,192 @@ function MainApp() {
               cursor: "pointer",
             }}
           >
-            {t("app.admin")}
+            {t("app.account")}
           </button>
-        )}
+        </div>
+      </header>
 
-        <button
-          onClick={() => setIsAuthOpen(true)}
-          style={{
-            padding: "6px 12px",
-            background: "#2563eb",
-            color: "#ffffff",
-            border: "none",
-            borderRadius: "8px",
-            fontSize: "0.8rem",
-            fontWeight: "bold",
-            cursor: "pointer",
-          }}
-        >
-          {t("app.account")}
-        </button>
-      </div>
-
-      {/* Lobby Menu */}
+      {/* Main Lobby Dashboard: 3-Column Grid */}
       <div
         style={{
           width: "100%",
-          maxWidth: "480px",
-          background: "rgba(30, 41, 59, 0.7)",
-          backdropFilter: "blur(12px)",
-          border: "1px solid rgba(255, 255, 255, 0.1)",
-          borderRadius: "24px",
-          padding: "32px",
-          boxShadow: "0 20px 40px rgba(0,0,0,0.5)",
-          textAlign: "center",
+          maxWidth: "1280px",
+          display: "grid",
+          gridTemplateColumns: "360px 1fr 340px",
+          gap: "20px",
+          alignItems: "stretch",
         }}
       >
-        <h1 style={{ margin: "0 0 8px 0", fontSize: "2rem", color: "#f59e0b" }}>
-          {t("app.title")}
-        </h1>
-        <p style={{ margin: "0 0 24px 0", color: "#94a3b8", fontSize: "0.95rem" }}>
-          {t("app.subtitle")}
-        </p>
+        {/* Left Column: Game Modes & Match Setup */}
+        <div
+          style={{
+            background: "rgba(30, 41, 59, 0.75)",
+            backdropFilter: "blur(12px)",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            borderRadius: "20px",
+            padding: "24px",
+            boxShadow: "0 16px 36px rgba(0,0,0,0.5)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "16px",
+          }}
+        >
+          <div>
+            <h2 style={{ margin: "0 0 4px 0", fontSize: "1.3rem", color: "#f59e0b" }}>
+              🎮 Select Game Mode
+            </h2>
+            <p style={{ margin: 0, color: "#94a3b8", fontSize: "0.85rem" }}>
+              {t("app.subtitle")}
+            </p>
+          </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-          {/* 1v1 AI Mode */}
-          <button
-            onClick={() => setMode("ai-1v1")}
-            style={{
-              padding: "14px 20px",
-              background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
-              color: "#ffffff",
-              border: "none",
-              borderRadius: "14px",
-              fontWeight: "bold",
-              fontSize: "1rem",
-              cursor: "pointer",
-              boxShadow: "0 4px 14px rgba(37, 99, 235, 0.4)",
-            }}
-          >
-            🤖 1v1 vs AI (Single Player)
-          </button>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            {/* 1v1 AI Mode */}
+            <button
+              onClick={() => setMode("ai-1v1")}
+              style={{
+                padding: "14px 18px",
+                background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
+                color: "#ffffff",
+                border: "none",
+                borderRadius: "14px",
+                fontWeight: "bold",
+                fontSize: "0.95rem",
+                cursor: "pointer",
+                boxShadow: "0 4px 14px rgba(37, 99, 235, 0.4)",
+              }}
+            >
+              🤖 1v1 vs AI (Single Player)
+            </button>
 
-          {/* 2v2 AI Mode (4 Players) */}
-          <button
-            onClick={() => setMode("ai-2v2")}
-            style={{
-              padding: "14px 20px",
-              background: "linear-gradient(135deg, #d97706 0%, #b45309 100%)",
-              color: "#ffffff",
-              border: "none",
-              borderRadius: "14px",
-              fontWeight: "bold",
-              fontSize: "1rem",
-              cursor: "pointer",
-              boxShadow: "0 4px 14px rgba(217, 119, 6, 0.4)",
-            }}
-          >
-            👥 2v2 vs AI (4 Players - Partners)
-          </button>
+            {/* 2v2 AI Mode (4 Players) */}
+            <button
+              onClick={() => setMode("ai-2v2")}
+              style={{
+                padding: "14px 18px",
+                background: "linear-gradient(135deg, #d97706 0%, #b45309 100%)",
+                color: "#ffffff",
+                border: "none",
+                borderRadius: "14px",
+                fontWeight: "bold",
+                fontSize: "0.95rem",
+                cursor: "pointer",
+                boxShadow: "0 4px 14px rgba(217, 119, 6, 0.4)",
+              }}
+            >
+              👥 2v2 vs AI (4 Players - Partners)
+            </button>
 
-          {/* Local 4-Player Pass & Play */}
-          <div
-            style={{
-              background: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: "14px",
-              padding: "14px",
-              display: "flex",
-              flexDirection: "column",
-              gap: "8px",
-            }}
-          >
-            <div style={{ fontWeight: 600, fontSize: "0.9rem", color: "#e2e8f0" }}>
-              👥 Local 2v2 (Pass & Play 4 Seats)
-            </div>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
-              <span style={{ fontSize: "0.8rem", color: "#94a3b8" }}>Seat:</span>
-              <select
-                value={playerID}
-                onChange={(e) => setPlayerID(e.target.value)}
+            {/* Local 4-Player Pass & Play */}
+            <div
+              style={{
+                background: "rgba(15, 23, 42, 0.5)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: "14px",
+                padding: "14px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px",
+              }}
+            >
+              <div style={{ fontWeight: 600, fontSize: "0.85rem", color: "#e2e8f0" }}>
+                👥 Local 2v2 (Pass & Play 4 Seats)
+              </div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+                <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>Seat:</span>
+                <select
+                  value={playerID}
+                  onChange={(e) => setPlayerID(e.target.value)}
+                  style={{
+                    padding: "4px 8px",
+                    borderRadius: "6px",
+                    background: "#0f172a",
+                    color: "#f8fafc",
+                    border: "1px solid rgba(255,255,255,0.2)",
+                    fontSize: "0.75rem",
+                  }}
+                >
+                  <option value="0">P0 (Team 0)</option>
+                  <option value="1">P1 (Team 1)</option>
+                  <option value="2">P2 (Team 0)</option>
+                  <option value="3">P3 (Team 1)</option>
+                </select>
+              </div>
+              <button
+                onClick={() => setMode("local")}
                 style={{
-                  padding: "4px 8px",
+                  padding: "8px 14px",
+                  background: "#059669",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                  fontSize: "0.8rem",
+                }}
+              >
+                Start 2v2 Local Match
+              </button>
+            </div>
+
+            {/* Online Match */}
+            <div
+              style={{
+                background: "rgba(15, 23, 42, 0.5)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: "14px",
+                padding: "14px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px",
+              }}
+            >
+              <div style={{ fontWeight: 600, fontSize: "0.85rem", color: "#e2e8f0" }}>
+                🌐 Online Server Match (1v1 / 2v2)
+              </div>
+              <input
+                value={matchID}
+                onChange={(e) => setMatchID(e.target.value)}
+                placeholder="Match ID"
+                style={{
+                  padding: "6px 12px",
                   borderRadius: "6px",
                   background: "#0f172a",
                   color: "#f8fafc",
                   border: "1px solid rgba(255,255,255,0.2)",
+                  width: "100%",
+                  textAlign: "center",
+                  fontSize: "0.8rem",
+                  boxSizing: "border-box",
+                }}
+              />
+              <button
+                onClick={() => setMode("online")}
+                style={{
+                  padding: "8px 14px",
+                  background: "#d97706",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontWeight: "bold",
+                  cursor: "pointer",
                   fontSize: "0.8rem",
                 }}
               >
-                <option value="0">P0 (Team 0)</option>
-                <option value="1">P1 (Team 1)</option>
-                <option value="2">P2 (Team 0)</option>
-                <option value="3">P3 (Team 1)</option>
-              </select>
+                Connect to Server
+              </button>
             </div>
-            <button
-              onClick={() => setMode("local")}
-              style={{
-                padding: "8px 14px",
-                background: "#059669",
-                color: "#ffffff",
-                border: "none",
-                borderRadius: "8px",
-                fontWeight: "bold",
-                cursor: "pointer",
-                fontSize: "0.85rem",
-              }}
-            >
-              Start 2v2 Local Match
-            </button>
           </div>
+        </div>
 
-          {/* Online Match */}
-          <div
-            style={{
-              background: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: "14px",
-              padding: "14px",
-              display: "flex",
-              flexDirection: "column",
-              gap: "8px",
-            }}
-          >
-            <div style={{ fontWeight: 600, fontSize: "0.9rem", color: "#e2e8f0" }}>
-              🌐 Online Server Match (1v1 / 2v2)
-            </div>
-            <input
-              value={matchID}
-              onChange={(e) => setMatchID(e.target.value)}
-              placeholder="Match ID"
-              style={{
-                padding: "6px 12px",
-                borderRadius: "6px",
-                background: "#0f172a",
-                color: "#f8fafc",
-                border: "1px solid rgba(255,255,255,0.2)",
-                width: "80%",
-                textAlign: "center",
-                fontSize: "0.8rem",
-                margin: "0 auto",
-              }}
-            />
-            <button
-              onClick={() => setMode("online")}
-              style={{
-                padding: "8px 14px",
-                background: "#d97706",
-                color: "#ffffff",
-                border: "none",
-                borderRadius: "8px",
-                fontWeight: "bold",
-                cursor: "pointer",
-                fontSize: "0.85rem",
-              }}
-            >
-              Connect to Server
-            </button>
-          </div>
+        {/* Center Column: Global Lobby Chat */}
+        <div style={{ minHeight: "560px" }}>
+          <LobbyChat />
+        </div>
+
+        {/* Right Column: Weekly & All-Time Leaderboard */}
+        <div style={{ minHeight: "560px" }}>
+          <Leaderboard />
         </div>
       </div>
 

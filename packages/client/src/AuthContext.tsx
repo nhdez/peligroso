@@ -3,6 +3,29 @@ import type { Session, User } from "@supabase/supabase-js";
 import type { DeckTheme } from "shared";
 import { supabase, isSupabaseConfigured } from "./supabaseClient.js";
 
+export interface CountryInfo {
+  code: string;
+  name: string;
+  flag: string;
+}
+
+export const COUNTRY_LIST: CountryInfo[] = [
+  { code: "AR", name: "Argentina", flag: "🇦🇷" },
+  { code: "UY", name: "Uruguay", flag: "🇺🇾" },
+  { code: "BR", name: "Brazil", flag: "🇧🇷" },
+  { code: "ES", name: "Spain", flag: "🇪🇸" },
+  { code: "MX", name: "Mexico", flag: "🇲🇽" },
+  { code: "CL", name: "Chile", flag: "🇨🇱" },
+  { code: "CO", name: "Colombia", flag: "🇨🇴" },
+  { code: "US", name: "USA", flag: "🇺🇸" },
+  { code: "GB", name: "United Kingdom", flag: "🇬🇧" },
+];
+
+export function getCountryFlag(code?: string): string {
+  const found = COUNTRY_LIST.find((c) => c.code === code);
+  return found ? found.flag : "🇦🇷";
+}
+
 export interface UserProfile {
   id: string;
   username: string;
@@ -16,6 +39,7 @@ export interface UserProfile {
   selected_deck_id: string;
   custom_mat_url: string;
   mat_opacity: number;
+  country_code: string;
 }
 
 export const PRESET_DECKS: DeckTheme[] = [
@@ -60,6 +84,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   updateStats: (won: boolean) => void;
   updateCustomization: (deckId: string, matUrl: string, opacity: number) => void;
+  updateCountry: (countryCode: string) => void;
   createDeckTheme: (theme: Omit<DeckTheme, "id">) => void;
   deleteDeckTheme: (id: string) => void;
   toggleUserBan: (userId: string) => void;
@@ -91,7 +116,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (saved) {
       try { return JSON.parse(saved); } catch {}
     }
-    return [];
+    return [
+      {
+        id: "bot-1",
+        username: "ElGaucho_AR",
+        display_name: "ElGaucho_AR",
+        elo_rating: 1450,
+        matches_played: 28,
+        matches_won: 20,
+        is_guest: false,
+        role: "user",
+        is_banned: false,
+        selected_deck_id: "classic-gold",
+        custom_mat_url: PRESET_MATS[0].url,
+        mat_opacity: 0.85,
+        country_code: "AR",
+      },
+      {
+        id: "bot-2",
+        username: "ElMate_UY",
+        display_name: "ElMate_UY",
+        elo_rating: 1390,
+        matches_played: 22,
+        matches_won: 15,
+        is_guest: false,
+        role: "user",
+        is_banned: false,
+        selected_deck_id: "royal-crimson",
+        custom_mat_url: PRESET_MATS[1].url,
+        mat_opacity: 0.85,
+        country_code: "UY",
+      },
+      {
+        id: "bot-3",
+        username: "TrucoMaster_ES",
+        display_name: "TrucoMaster_ES",
+        elo_rating: 1310,
+        matches_played: 18,
+        matches_won: 11,
+        is_guest: false,
+        role: "user",
+        is_banned: false,
+        selected_deck_id: "cyber-neon",
+        custom_mat_url: PRESET_MATS[3].url,
+        mat_opacity: 0.85,
+        country_code: "ES",
+      },
+    ];
   });
 
   useEffect(() => {
@@ -152,6 +223,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       selected_deck_id: "classic-gold",
       custom_mat_url: PRESET_MATS[0].url,
       mat_opacity: 0.85,
+      country_code: "AR",
     };
     localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(guestProf));
     setProfile(guestProf);
@@ -169,7 +241,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (data) {
-        setProfile({ ...data, is_guest: false });
+        setProfile({ ...data, is_guest: false, country_code: data.country_code || "AR" });
       } else if (error && error.code === "PGRST116") {
         const username = user.email?.split("@")[0] || `user_${user.id.slice(0, 6)}`;
         const newProf: UserProfile = {
@@ -185,6 +257,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           selected_deck_id: "classic-gold",
           custom_mat_url: PRESET_MATS[0].url,
           mat_opacity: 0.85,
+          country_code: "AR",
         };
         await supabase.from("profiles").insert([newProf]);
         setProfile(newProf);
@@ -223,6 +296,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         selected_deck_id: "classic-gold",
         custom_mat_url: PRESET_MATS[0].url,
         mat_opacity: 0.85,
+        country_code: "AR",
       };
       await supabase.from("profiles").insert([newProf]);
       setProfile(newProf);
@@ -289,6 +363,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  function updateCountry(countryCode: string) {
+    if (!profile) return;
+    const updated: UserProfile = {
+      ...profile,
+      country_code: countryCode,
+    };
+    setProfile(updated);
+    setAllUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+
+    if (profile.is_guest) {
+      localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(updated));
+    } else if (supabase && user) {
+      supabase.from("profiles").update({
+        country_code: countryCode,
+      }).eq("id", user.id);
+    }
+  }
+
   function createDeckTheme(theme: Omit<DeckTheme, "id">) {
     const newTheme: DeckTheme = {
       ...theme,
@@ -339,6 +431,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signOut,
         updateStats,
         updateCustomization,
+        updateCountry,
         createDeckTheme,
         deleteDeckTheme,
         toggleUserBan,

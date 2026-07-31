@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { useAuth, PRESET_MATS } from "./AuthContext.js";
+import { useAuth, PRESET_MATS, COUNTRY_LIST } from "./AuthContext.js";
 
 export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const { signIn, signUp, signInAsGuest, isConfigured, profile, decks, updateCustomization } = useAuth();
+  const { signIn, signUp, signInAsGuest, isConfigured, profile, decks, updateCustomization, updateCountry } = useAuth();
   const [tab, setTab] = useState<"signin" | "signup" | "customization" | "guest">("customization");
 
   const [email, setEmail] = useState("");
@@ -15,6 +15,7 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
   const [selectedDeck, setSelectedDeck] = useState(profile?.selected_deck_id || "classic-gold");
   const [matUrl, setMatUrl] = useState(profile?.custom_mat_url || PRESET_MATS[0].url);
   const [matOpacity, setMatOpacity] = useState(profile?.mat_opacity ?? 0.85);
+  const [selectedCountry, setSelectedCountry] = useState(profile?.country_code || "AR");
 
   if (!isOpen) return null;
 
@@ -38,6 +39,7 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
       else onClose();
     } else if (tab === "customization") {
       updateCustomization(selectedDeck, matUrl, matOpacity);
+      updateCountry(selectedCountry);
       onClose();
     } else {
       signInAsGuest(username || undefined);
@@ -122,7 +124,7 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
           }}
         >
           <button onClick={() => setTab("customization")} style={tabBtnStyle(tab === "customization")}>
-            🎨 Customization
+            🎨 Profile & Customization
           </button>
           <button onClick={() => setTab("signin")} style={tabBtnStyle(tab === "signin")}>
             Sign In
@@ -170,6 +172,22 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
           {tab === "customization" && (
             <>
+              {/* Select Country */}
+              <div>
+                <label style={labelStyle}>🌍 Select Country (Flag Badge)</label>
+                <select
+                  value={selectedCountry}
+                  onChange={(e) => setSelectedCountry(e.target.value)}
+                  style={inputStyle}
+                >
+                  {COUNTRY_LIST.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.flag} {c.name} ({c.code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {/* Select Deck Theme */}
               <div>
                 <label style={labelStyle}>🎴 Select Card Deck Theme</label>
