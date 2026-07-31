@@ -41,6 +41,9 @@ export interface UserProfile {
   mat_opacity: number;
   country_code: string;
   avatar_url?: string;
+  victory_image_url?: string;
+  victory_youtube_url?: string;
+  victory_quote?: string;
 }
 
 export const PRESET_DECKS: DeckTheme[] = [
@@ -408,6 +411,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await persistProfile(updated);
   }
 
+  async function updateVictoryShowcase(image: string, youtube: string, quote: string) {
+    if (!profile) return;
+    const updated: UserProfile = {
+      ...profile,
+      victory_image_url: image,
+      victory_youtube_url: youtube,
+      victory_quote: quote,
+    };
+    await persistProfile(updated);
+  }
+
   async function createDeckTheme(theme: Omit<DeckTheme, "id">) {
     const id = `deck-${Date.now()}`;
     const newTheme: DeckTheme = {
@@ -496,6 +510,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         updateCustomization,
         updateCountry,
         updateAvatar,
+        updateVictoryShowcase,
         createDeckTheme,
         updateDeckTheme,
         deleteDeckTheme,

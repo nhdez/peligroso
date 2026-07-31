@@ -16,6 +16,7 @@ import { useI18n } from "./i18n/I18nContext.js";
 import { SocialPanel } from "./social/SocialPanel.js";
 import { VideoAvatar } from "./social/VideoAvatar.js";
 import { SuerteDeReyesModal } from "./SuerteDeReyesModal.js";
+import { VictoryCardModal } from "./VictoryCardModal.js";
 
 
 
@@ -43,6 +44,7 @@ export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps
   const [hoveredCardId, setHoveredCardId] = useState<string | null>(null);
   const [draggedCardIndex, setDraggedCardIndex] = useState<number | null>(null);
   const [myVideoStream, setMyVideoStream] = useState<MediaStream | null>(null);
+  const [dismissedVictoryCard, setDismissedVictoryCard] = useState(false);
 
 
   const PHASE_DESCRIPTIONS: Record<HandPhase, string> = {
@@ -1036,6 +1038,20 @@ export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps
           suerteDeReyes={G.suerteDeReyes}
           cardFaces={activeDeckTheme?.cardFaces}
           onComplete={() => moves.completeSuerteDeReyes && moves.completeSuerteDeReyes()}
+        />
+      )}
+
+      {/* CS2 MVP Victory Showcase Card Overlay */}
+      {G.winner !== null && !dismissedVictoryCard && (
+        <VictoryCardModal
+          winnerName={G.winner === myTeam ? (profile?.username || `Player ${myID}`) : `Player ${G.winner}`}
+          winnerAvatar={G.winner === myTeam ? profile?.avatar_url : undefined}
+          countryCode={G.winner === myTeam ? profile?.country_code : "AR"}
+          eloRating={G.winner === myTeam ? (profile?.elo_rating ?? 1200) : 1200}
+          victoryImageUrl={G.winner === myTeam ? profile?.victory_image_url : undefined}
+          victoryYoutubeUrl={G.winner === myTeam ? profile?.victory_youtube_url : undefined}
+          victoryQuote={G.winner === myTeam ? profile?.victory_quote : undefined}
+          onClose={() => setDismissedVictoryCard(true)}
         />
       )}
     </div>

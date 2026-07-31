@@ -3,10 +3,11 @@ import { useAuth, PRESET_MATS, COUNTRY_LIST, getCountryFlag } from "./AuthContex
 import { useStorage } from "./storage/StorageContext.js";
 
 export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const { signIn, signUp, signInAsGuest, signOut, isConfigured, profile, decks, updateCustomization, updateCountry, updateAvatar } = useAuth();
+  const { signIn, signUp, signInAsGuest, signOut, isConfigured, profile, decks, updateCustomization, updateCountry, updateAvatar, updateVictoryShowcase } = useAuth();
   const { uploadAsset } = useStorage();
   const [isUploadingMat, setIsUploadingMat] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isUploadingVictoryImg, setIsUploadingVictoryImg] = useState(false);
   const [tab, setTab] = useState<"signin" | "signup" | "customization" | "guest">("customization");
 
   const [email, setEmail] = useState("");
@@ -22,6 +23,11 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
   const [selectedCountry, setSelectedCountry] = useState(profile?.country_code || "AR");
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || "");
 
+  // CS2-Style Victory Showcase Card State
+  const [victoryImageUrl, setVictoryImageUrl] = useState(profile?.victory_image_url || "");
+  const [victoryYoutubeUrl, setVictoryYoutubeUrl] = useState(profile?.victory_youtube_url || "");
+  const [victoryQuote, setVictoryQuote] = useState(profile?.victory_quote || "");
+
   const isLoggedIn = Boolean(profile && !profile.is_guest);
 
   useEffect(() => {
@@ -31,6 +37,9 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
       setMatOpacity(profile.mat_opacity ?? 0.85);
       setSelectedCountry(profile.country_code || "AR");
       setAvatarUrl(profile.avatar_url || "");
+      setVictoryImageUrl(profile.victory_image_url || "");
+      setVictoryYoutubeUrl(profile.victory_youtube_url || "");
+      setVictoryQuote(profile.victory_quote || "");
     }
   }, [profile]);
 
@@ -48,6 +57,7 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         if (avatarUrl) {
           await updateAvatar(avatarUrl);
         }
+        await updateVictoryShowcase(victoryImageUrl, victoryYoutubeUrl, victoryQuote);
         onClose();
       } else if (tab === "signin") {
         const res = await signIn(email, password);
@@ -101,6 +111,20 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
       alert(`Avatar upload failed: ${err.message}`);
     } finally {
       setIsUploadingAvatar(false);
+    }
+  }
+
+  async function handleVictoryImgFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingVictoryImg(true);
+    try {
+      const url = await uploadAsset(file, "avatars");
+      setVictoryImageUrl(url);
+    } catch (err: any) {
+      alert(`Victory image upload failed: ${err.message}`);
+    } finally {
+      setIsUploadingVictoryImg(false);
     }
   }
 
@@ -399,6 +423,59 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                   onChange={(e) => setMatOpacity(parseFloat(e.target.value))}
                   style={{ width: "100%", accentColor: "#f59e0b" }}
                 />
+              </div>
+
+              {/* CS2-Style Victory Showcase Card Settings */}
+              <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: "1px dashed rgba(255,255,255,0.15)" }}>
+                <div style={{ fontSize: "0.85rem", fontWeight: "bold", color: "#f59e0b", marginBottom: "8px" }}>
+                  🏆 CS2-Style Victory Showcase Card
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  <div>
+                    <label style={labelStyle}>📸 Victory Image / Banner URL</label>
+                    <input
+                      type="text"
+                      value={victoryImageUrl}
+                      onChange={(e) => setVictoryImageUrl(e.target.value)}
+                      placeholder="https://example.com/victory-banner.jpg"
+                      style={inputStyle}
+                    />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleVictoryImgFileUpload}
+                      disabled={isUploadingVictoryImg}
+                      style={{ color: "#94a3b8", fontSize: "0.75rem", marginTop: "4px" }}
+                    />
+                    {isUploadingVictoryImg && <div style={{ fontSize: "0.7rem", color: "#f59e0b" }}>⏳ Uploading victory image...</div>}
+                  </div>
+
+                  <div>
+                    <label style={labelStyle}>🎵 Victory Anthem (YouTube Video URL)</label>
+                    <input
+                      type="text"
+                      value={victoryYoutubeUrl}
+                      onChange={(e) => setVictoryYoutubeUrl(e.target.value)}
+                      placeholder="https://www.youtube.com/watch?v=..."
+                      style={inputStyle}
+                    />
+                    <div style={{ fontSize: "0.7rem", color: "#94a3b8", marginTop: "2px" }}>
+                      Plays 10 seconds of background victory audio in the arena when you win!
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={labelStyle}>💬 Victory Motto / Quote</label>
+                    <input
+                      type="text"
+                      value={victoryQuote}
+                      onChange={(e) => setVictoryQuote(e.target.value)}
+                      placeholder="¡El Rey del Truco!"
+                      style={inputStyle}
+                    />
+                  </div>
+                </div>
               </div>
             </>
           )}
