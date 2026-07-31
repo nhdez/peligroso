@@ -91,6 +91,7 @@ interface AuthContextType {
   updateCustomization: (deckId: string, matUrl: string, opacity: number) => Promise<void>;
   updateCountry: (countryCode: string) => Promise<void>;
   updateAvatar: (avatarUrl: string) => Promise<void>;
+  updateVictoryShowcase: (image: string, youtube: string, quote: string) => Promise<void>;
   addCredits: (amount: number) => Promise<void>;
   createDeckTheme: (theme: Omit<DeckTheme, "id">) => void;
   updateDeckTheme: (id: string, theme: Omit<DeckTheme, "id">) => void;
