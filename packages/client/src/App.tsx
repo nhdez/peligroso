@@ -397,10 +397,10 @@ function MainApp() {
             <span style={{ fontSize: "1.6rem" }}>⚡</span>
             <div>
               <div style={{ fontSize: "1rem", fontWeight: "bold", color: "#60a5fa" }}>
-                Active Match In Progress! (Match #{activeSession.matchID})
+                {t("active_session.title", { id: activeSession.matchID })}
               </div>
               <div style={{ fontSize: "0.8rem", color: "#cbd5e1" }}>
-                You were disconnected or refreshed. Click rejoin below to return to your game.
+                {t("active_session.desc")}
               </div>
             </div>
           </div>
@@ -420,7 +420,7 @@ function MainApp() {
                 boxShadow: "0 4px 12px rgba(37, 99, 235, 0.4)",
               }}
             >
-              ⚡ Rejoin Match Now
+              {t("active_session.rejoin")}
             </button>
             <button
               onClick={handleClearSession}
@@ -435,7 +435,7 @@ function MainApp() {
                 cursor: "pointer",
               }}
             >
-              Abandon Session ❌
+              {t("active_session.abandon")}
             </button>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { SuerteDeReyesState } from "shared";
 import { RenderCard } from "./TrucoBoard.js";
+import { useI18n } from "./i18n/I18nContext.js";
 
 interface SuerteDeReyesModalProps {
   suerteDeReyes: SuerteDeReyesState;
@@ -13,6 +14,7 @@ export function SuerteDeReyesModal({
   cardFaces,
   onComplete,
 }: SuerteDeReyesModalProps) {
+  const { t } = useI18n();
   const [stepIndex, setStepIndex] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
 
@@ -94,11 +96,11 @@ export function SuerteDeReyesModal({
           gap: "10px",
         }}
       >
-        <span>👑</span> Suerte de Reyes <span>👑</span>
+        <span>👑</span> {t("reyes.title")} <span>👑</span>
       </div>
 
       <div style={{ color: "#cbd5e1", fontSize: "0.9rem", marginBottom: "24px", textAlign: "center" }}>
-        Drawing cards face-up... Whoever gets the first <strong>King (12)</strong> shuffles and deals!
+        {t("reyes.subtitle")}
       </div>
 
       {/* Main Card Dealing Table Stage */}
@@ -194,13 +196,13 @@ export function SuerteDeReyesModal({
           }}
         >
           <div style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#fde047", marginBottom: "4px" }}>
-            👑 ¡SUERTE DE REYES RESOLVED!
+            👑 {t("reyes.resolved")}
           </div>
           <div style={{ fontSize: "0.95rem", color: "#ffffff" }}>
-            Player <strong>{winnerID}</strong> drew the <strong>{currentStep.card.rank} de {currentStep.card.suit}</strong>!
+            {t("reyes.won_msg", { id: winnerID, rank: currentStep.card.rank, suit: currentStep.card.suit })}
           </div>
           <div style={{ fontSize: "0.85rem", color: "#94a3b8", marginTop: "4px" }}>
-            Player {winnerID} will shuffle and deal Hand #1.
+            {t("reyes.dealer_msg", { id: winnerID })}
           </div>
         </div>
       )}
@@ -220,7 +222,7 @@ export function SuerteDeReyesModal({
           boxShadow: "0 4px 14px rgba(37, 99, 235, 0.4)",
         }}
       >
-        {isFinished ? "⚡ Begin Game" : "⏩ Skip Ritual"}
+        {isFinished ? t("reyes.begin") : t("reyes.skip")}
       </button>
     </div>
   );

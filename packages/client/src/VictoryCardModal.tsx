@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { getCountryFlag } from "./AuthContext.js";
+import { useI18n } from "./i18n/I18nContext.js";
 
 interface VictoryCardModalProps {
   winnerName: string;
@@ -29,6 +30,7 @@ export function VictoryCardModal({
   victoryQuote = "GG WP! ¡El Rey del Truco!",
   onClose,
 }: VictoryCardModalProps) {
+  const { t } = useI18n();
   const [secondsLeft, setSecondsLeft] = useState(10);
   const videoId = parseYoutubeVideoId(victoryYoutubeUrl);
 
@@ -126,7 +128,7 @@ export function VictoryCardModal({
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <span style={{ fontSize: "1.3rem" }}>🏆</span>
             <span style={{ color: "#ffffff", fontWeight: 900, fontSize: "1.05rem", letterSpacing: "1px", textTransform: "uppercase" }}>
-              MATCH MVP — VICTORY CARD
+              {t("victory.title")}
             </span>
           </div>
 
@@ -140,7 +142,7 @@ export function VictoryCardModal({
               color: "#fde047",
             }}
           >
-            🎵 10s Anthem Active ({secondsLeft}s)
+            {t("victory.anthem_active", { sec: secondsLeft })}
           </div>
         </div>
 
@@ -175,7 +177,7 @@ export function VictoryCardModal({
                 <span>{winnerName}</span>
               </div>
               <div style={{ fontSize: "0.85rem", color: "#94a3b8", marginTop: "2px" }}>
-                MATCH WINNER | ELO Rating: <strong style={{ color: "#60a5fa" }}>{eloRating}</strong>
+                {t("victory.winner_label", { elo: eloRating })}
               </div>
             </div>
           </div>
@@ -245,7 +247,7 @@ export function VictoryCardModal({
               cursor: "pointer",
             }}
           >
-            Dismiss Victory Showcase
+            {t("victory.dismiss")}
           </button>
         </div>
       </div>

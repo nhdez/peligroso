@@ -22,6 +22,12 @@ export const DEFAULT_TRANSLATIONS: Record<string, TranslationDictionary> = {
     "mode.start_local": "Iniciar Partida Local",
     "mode.connect_server": "Conectarse al Servidor",
 
+    // Active Session Reconnection Banner
+    "active_session.title": "¡Partida en Progreso! (Partida #{id})",
+    "active_session.desc": "Te desconectaste o recargaste la página. Hacé clic abajo para volver a la partida.",
+    "active_session.rejoin": "⚡ Volver a la Partida",
+    "active_session.abandon": "Abandonar Sesión ❌",
+
     // Phases
     "phase.title": "Fase Actual",
     "phase.primera": "PRIMERA",
@@ -66,7 +72,63 @@ export const DEFAULT_TRANSLATIONS: Record<string, TranslationDictionary> = {
     "table.history": "📜 Historial de la Partida",
     "table.arena": "🏟️ Arena: Mat de {name}",
 
-    // Admin & Auth
+    // Voice & Social Panel Controls
+    "social.mic_off": "Microfono: Desactivado",
+    "social.mic_muted": "Microfono: Silenciado",
+    "social.mic_active": "Microfono: Activo",
+    "social.cam_active": "Cámara: Transmitiendo",
+    "social.cam_off": "Cámara: Desactivada",
+    "social.audio_muted": "Salida de Audio: Silenciada",
+    "social.audio_active": "Salida de Audio: Activa",
+    "social.spectators_title": "👥 Control de Audio de Espectadores",
+    "social.mute_specs_on": "Silenciar Espectadores: SI",
+    "social.mute_specs_off": "Silenciar Espectadores: NO",
+    "social.send": "Enviar",
+    "social.placeholder": "Enviar mensaje...",
+    "social.live_chat": "💬 Chat en Vivo",
+    "social.game_logs": "📜 Registro de Partida",
+
+    // Suerte de Reyes Opening Ritual
+    "reyes.title": "Suerte de Reyes",
+    "reyes.subtitle": "Sacando cartas boca arriba... ¡El que saque el primer Rey (12) mezcla y reparte!",
+    "reyes.resolved": "¡SUERTE DE REYES RESUELTA!",
+    "reyes.won_msg": "¡El Jugador {id} sacó el {rank} de {suit}!",
+    "reyes.dealer_msg": "El Jugador {id} mezclará y repartirá la primera mano.",
+    "reyes.begin": "⚡ Iniciar Juego",
+    "reyes.skip": "⏩ Saltar Ritual",
+
+    // CS2 Victory Showcase Card
+    "victory.title": "MVP DE LA PARTIDA — TARJETA DE VICTORIA",
+    "victory.anthem_active": "🎵 Himno de Victoria Activo ({sec}s)",
+    "victory.winner_label": "GANADOR DE LA PARTIDA | Rating ELO: {elo}",
+    "victory.dismiss": "Cerrar Tarjeta de Victoria",
+
+    // Profile & Account Customization
+    "profile.avatar_label": "👤 Imagen de Avatar de Perfil",
+    "profile.country_label": "🌍 Seleccionar País (Bandera)",
+    "profile.deck_label": "🎴 Seleccionar Tema del Mazo de Cartas",
+    "profile.mat_preset_label": "🏟️ Seleccionar Tapete de la Arena",
+    "profile.mat_custom_label": "🖼️ O Subir Imagen de Tapete Personalizado",
+    "profile.opacity_label": "🌗 Opacidad del Tapete ({percent}%)",
+    "profile.victory_title": "🏆 Tarjeta de Victoria Estilo CS2",
+    "profile.victory_img_label": "📸 URL de Imagen / Banner de Victoria",
+    "profile.victory_music_label": "🎵 Himno de Victoria (URL de Video de YouTube)",
+    "profile.victory_music_desc": "¡Reproduce 10 segundos de música de victoria cuando ganás!",
+    "profile.victory_quote_label": "💬 Lema / Frase de Victoria",
+    "profile.save": "Guardar Cambios",
+
+    // Leaderboard & Matchmaking Queue
+    "leaderboard.title": "🏆 Tabla de Clasificación Global",
+    "leaderboard.rank": "Puesto",
+    "leaderboard.player": "Jugador",
+    "leaderboard.elo": "Rating ELO",
+    "leaderboard.win_rate": "Porcentaje de Victorias",
+    "queue.searching": "🔍 Buscando Oponente 1v1...",
+    "queue.estimated": "Tiempo estimado: ~10s",
+    "queue.switch_ai": "🤖 Jugar contra la IA",
+    "queue.cancel": "Cancelar Búsqueda",
+
+    // Admin Console
     "admin.console_title": "🛡️ Consola de Administración",
     "admin.tab_users": "👥 Gestionar Usuarios",
     "admin.tab_decks": "🎴 Temas de Mazos",
@@ -92,6 +154,12 @@ export const DEFAULT_TRANSLATIONS: Record<string, TranslationDictionary> = {
     "mode.match_id": "Match ID",
     "mode.start_local": "Start Local Match",
     "mode.connect_server": "Connect to Server",
+
+    // Active Session Reconnection Banner
+    "active_session.title": "Active Match In Progress! (Match #{id})",
+    "active_session.desc": "You were disconnected or refreshed. Click rejoin below to return to your game.",
+    "active_session.rejoin": "⚡ Rejoin Match Now",
+    "active_session.abandon": "Abandon Session ❌",
 
     // Phases
     "phase.title": "Current Phase",
@@ -137,7 +205,63 @@ export const DEFAULT_TRANSLATIONS: Record<string, TranslationDictionary> = {
     "table.history": "📜 Game History",
     "table.arena": "🏟️ Arena: {name}'s Mat",
 
-    // Admin & Auth
+    // Voice & Social Panel Controls
+    "social.mic_off": "Microphone: Off",
+    "social.mic_muted": "Microphone: Muted",
+    "social.mic_active": "Microphone: Active",
+    "social.cam_active": "Camera Stream: Active",
+    "social.cam_off": "Camera Stream: Off",
+    "social.audio_muted": "Audio Output: Muted",
+    "social.audio_active": "Audio Output: Active",
+    "social.spectators_title": "👥 Spectator Audio Controls",
+    "social.mute_specs_on": "Mute Spectators: ON",
+    "social.mute_specs_off": "Mute Spectators: OFF",
+    "social.send": "Send",
+    "social.placeholder": "Send message...",
+    "social.live_chat": "💬 Live Chat",
+    "social.game_logs": "📜 Game Logs",
+
+    // Suerte de Reyes Opening Ritual
+    "reyes.title": "Suerte de Reyes",
+    "reyes.subtitle": "Drawing cards face-up... Whoever gets the first King (12) shuffles and deals!",
+    "reyes.resolved": "¡SUERTE DE REYES RESOLVED!",
+    "reyes.won_msg": "Player {id} drew the {rank} de {suit}!",
+    "reyes.dealer_msg": "Player {id} will shuffle and deal Hand #1.",
+    "reyes.begin": "⚡ Begin Game",
+    "reyes.skip": "⏩ Skip Ritual",
+
+    // CS2 Victory Showcase Card
+    "victory.title": "MATCH MVP — VICTORY CARD",
+    "victory.anthem_active": "🎵 10s Anthem Active ({sec}s)",
+    "victory.winner_label": "MATCH WINNER | ELO Rating: {elo}",
+    "victory.dismiss": "Dismiss Victory Showcase",
+
+    // Profile & Account Customization
+    "profile.avatar_label": "👤 Profile Avatar Image",
+    "profile.country_label": "🌍 Select Country (Flag Badge)",
+    "profile.deck_label": "🎴 Select Card Deck Theme",
+    "profile.mat_preset_label": "🏟️ Select Arena Mat Surface",
+    "profile.mat_custom_label": "🖼️ Or Upload Custom Arena Mat Image",
+    "profile.opacity_label": "🌗 Mat Surface Opacity ({percent}%)",
+    "profile.victory_title": "🏆 CS2-Style Victory Showcase Card",
+    "profile.victory_img_label": "📸 Victory Image / Banner URL",
+    "profile.victory_music_label": "🎵 Victory Anthem (YouTube Video URL)",
+    "profile.victory_music_desc": "Plays 10 seconds of background victory audio in the arena when you win!",
+    "profile.victory_quote_label": "💬 Victory Motto / Quote",
+    "profile.save": "Save Changes",
+
+    // Leaderboard & Matchmaking Queue
+    "leaderboard.title": "🏆 Global Leaderboard & Top Players",
+    "leaderboard.rank": "Rank",
+    "leaderboard.player": "Player",
+    "leaderboard.elo": "ELO Rating",
+    "leaderboard.win_rate": "Win Rate",
+    "queue.searching": "🔍 Searching for 1v1 Opponent...",
+    "queue.estimated": "Estimated wait: ~10s",
+    "queue.switch_ai": "🤖 Switch to AI Match",
+    "queue.cancel": "Cancel Queue",
+
+    // Admin Console
     "admin.console_title": "🛡️ Admin Management Console",
     "admin.tab_users": "👥 Manage Users",
     "admin.tab_decks": "🎴 Card Deck Themes",

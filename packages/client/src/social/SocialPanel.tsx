@@ -309,7 +309,7 @@ export function SocialPanel({
               textAlign: "center",
             }}
           >
-            {!micActive ? "Microphone: Off" : isMicMuted ? "Microphone: Muted" : "Microphone: Active"}
+            {!micActive ? t("social.mic_off") : isMicMuted ? t("social.mic_muted") : t("social.mic_active")}
           </button>
 
           {/* Video Stream Button */}
@@ -328,7 +328,7 @@ export function SocialPanel({
               textAlign: "center",
             }}
           >
-            {isVideoActive ? "Camera Stream: Active" : "Camera Stream: Off"}
+            {isVideoActive ? t("social.cam_active") : t("social.cam_off")}
           </button>
 
           {/* Deafen Button */}
@@ -347,7 +347,7 @@ export function SocialPanel({
               textAlign: "center",
             }}
           >
-            {isDeafened ? "Audio Output: Muted" : "Audio Output: Active"}
+            {isDeafened ? t("social.audio_muted") : t("social.audio_active")}
           </button>
         </div>
 
@@ -437,7 +437,7 @@ export function SocialPanel({
             cursor: "pointer",
           }}
         >
-          💬 Live Chat
+          💬 {t("social.live_chat")}
         </button>
         <button
           onClick={() => setActiveTab("logs")}
@@ -453,7 +453,7 @@ export function SocialPanel({
             cursor: "pointer",
           }}
         >
-          📜 Game Logs
+          📜 {t("social.game_logs")}
         </button>
       </div>
 
@@ -512,7 +512,7 @@ export function SocialPanel({
           <form onSubmit={handleSendMessage} style={{ display: "flex", gap: "8px", width: "100%" }}>
             <input
               type="text"
-              placeholder="Send message..."
+              placeholder={t("social.placeholder")}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               style={{
@@ -540,7 +540,7 @@ export function SocialPanel({
                 flexShrink: 0,
               }}
             >
-              Send
+              {t("social.send")}
             </button>
           </form>
         </div>

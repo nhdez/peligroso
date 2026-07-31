@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useAuth, PRESET_MATS, COUNTRY_LIST, getCountryFlag } from "./AuthContext.js";
 import { useStorage } from "./storage/StorageContext.js";
+import { useI18n } from "./i18n/I18nContext.js";
 
 export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const { t } = useI18n();
   const { signIn, signUp, signInAsGuest, signOut, isConfigured, profile, decks, updateCustomization, updateCountry, updateAvatar, updateVictoryShowcase } = useAuth();
   const { uploadAsset } = useStorage();
   const [isUploadingMat, setIsUploadingMat] = useState(false);
@@ -287,7 +289,7 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
             <>
               {/* Upload Profile Avatar Image */}
               <div>
-                <label style={labelStyle}>👤 Profile Avatar Image</label>
+                <label style={labelStyle}>{t("profile.avatar_label")}</label>
                 <div style={{ display: "flex", alignItems: "center", gap: "12px", background: "rgba(15, 23, 42, 0.6)", padding: "10px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.1)" }}>
                   <div
                     style={{
@@ -328,7 +330,7 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
 
               {/* Select Country */}
               <div>
-                <label style={labelStyle}>🌍 Select Country (Flag Badge)</label>
+                <label style={labelStyle}>{t("profile.country_label")}</label>
                 <select
                   value={selectedCountry}
                   onChange={(e) => {
@@ -348,7 +350,7 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
 
               {/* Select Deck Theme */}
               <div>
-                <label style={labelStyle}>🎴 Select Card Deck Theme</label>
+                <label style={labelStyle}>{t("profile.deck_label")}</label>
                 <select
                   value={selectedDeck}
                   onChange={(e) => {
@@ -368,7 +370,7 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
 
               {/* Select Battleground Mat */}
               <div>
-                <label style={labelStyle}>🏟️ Battleground Mat Texture</label>
+                <label style={labelStyle}>{t("profile.mat_preset_label")}</label>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "8px" }}>
                   {PRESET_MATS.map((m) => (
                     <button
@@ -398,7 +400,7 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
 
               {/* Upload Custom Mat Image */}
               <div>
-                <label style={labelStyle}>🖼️ Or Upload Custom Arena Mat Image</label>
+                <label style={labelStyle}>{t("profile.mat_custom_label")}</label>
                 <input
                   type="file"
                   accept="image/*"
@@ -412,7 +414,7 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
               {/* Mat Opacity Slider */}
               <div>
                 <label style={labelStyle}>
-                  🌗 Mat Surface Opacity ({Math.round(matOpacity * 100)}%)
+                  {t("profile.opacity_label", { percent: Math.round(matOpacity * 100) })}
                 </label>
                 <input
                   type="range"
@@ -428,12 +430,12 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
               {/* CS2-Style Victory Showcase Card Settings */}
               <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: "1px dashed rgba(255,255,255,0.15)" }}>
                 <div style={{ fontSize: "0.85rem", fontWeight: "bold", color: "#f59e0b", marginBottom: "8px" }}>
-                  🏆 CS2-Style Victory Showcase Card
+                  {t("profile.victory_title")}
                 </div>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                   <div>
-                    <label style={labelStyle}>📸 Victory Image / Banner URL</label>
+                    <label style={labelStyle}>{t("profile.victory_img_label")}</label>
                     <input
                       type="text"
                       value={victoryImageUrl}
@@ -452,7 +454,7 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                   </div>
 
                   <div>
-                    <label style={labelStyle}>🎵 Victory Anthem (YouTube Video URL)</label>
+                    <label style={labelStyle}>{t("profile.victory_music_label")}</label>
                     <input
                       type="text"
                       value={victoryYoutubeUrl}
@@ -461,12 +463,12 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                       style={inputStyle}
                     />
                     <div style={{ fontSize: "0.7rem", color: "#94a3b8", marginTop: "2px" }}>
-                      Plays 10 seconds of background victory audio in the arena when you win!
+                      {t("profile.victory_music_desc")}
                     </div>
                   </div>
 
                   <div>
-                    <label style={labelStyle}>💬 Victory Motto / Quote</label>
+                    <label style={labelStyle}>{t("profile.victory_quote_label")}</label>
                     <input
                       type="text"
                       value={victoryQuote}
