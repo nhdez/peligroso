@@ -258,6 +258,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           custom_mat_url: data.custom_mat_url || PRESET_MATS[0].url,
           mat_opacity: data.mat_opacity ?? 0.85,
           country_code: data.country_code || "AR",
+          avatar_url: data.avatar_url || "",
         });
       } else if (error && error.code === "PGRST116") {
         const username = user.email?.split("@")[0] || `user_${user.id.slice(0, 6)}`;
@@ -358,6 +359,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  async function persistProfile(updated: UserProfile) {
+    setProfile(updated);
+    setAllUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+
+    if (updated.is_guest) {
+      localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(updated));
+    } else if (isSupabaseConfigured && supabase && updated.id) {
+      const { error } = await supabase.from("profiles").update({
+        selected_deck_id: updated.selected_deck_id,
+        custom_mat_url: updated.custom_mat_url,
+        mat_opacity: updated.mat_opacity,
+        country_code: updated.country_code,
+        avatar_url: updated.avatar_url || "",
+        display_name: updated.display_name,
+      }).eq("id", updated.id);
+
+      if (error) console.error("Error committing profile to Supabase:", error);
+    }
+  }
+
   async function updateCustomization(deckId: string, matUrl: string, opacity: number) {
     if (!profile) return;
     const updated: UserProfile = {
@@ -366,20 +387,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       custom_mat_url: matUrl,
       mat_opacity: opacity,
     };
-    setProfile(updated);
-    setAllUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
-
-    if (profile.is_guest) {
-      localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(updated));
-    } else if (supabase && profile.id) {
-      const { error } = await supabase.from("profiles").update({
-        selected_deck_id: deckId,
-        custom_mat_url: matUrl,
-        mat_opacity: opacity,
-      }).eq("id", profile.id);
-
-      if (error) console.error("Error committing customization to Supabase:", error);
-    }
+    await persistProfile(updated);
   }
 
   async function updateCountry(countryCode: string) {
@@ -388,18 +396,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       ...profile,
       country_code: countryCode,
     };
-    setProfile(updated);
-    setAllUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
-
-    if (profile.is_guest) {
-      localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(updated));
-    } else if (supabase && profile.id) {
-      const { error } = await supabase.from("profiles").update({
-        country_code: countryCode,
-      }).eq("id", profile.id);
-
-      if (error) console.error("Error committing country to Supabase:", error);
-    }
+    await persistProfile(updated);
   }
 
   async function updateAvatar(avatarUrl: string) {
@@ -408,18 +405,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       ...profile,
       avatar_url: avatarUrl,
     };
-    setProfile(updated);
-    setAllUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
-
-    if (profile.is_guest) {
-      localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(updated));
-    } else if (supabase && profile.id) {
-      const { error } = await supabase.from("profiles").update({
-        avatar_url: avatarUrl,
-      }).eq("id", profile.id);
-
-      if (error) console.error("Error committing avatar to Supabase:", error);
-    }
+    await persistProfile(updated);
   }
 
   async function createDeckTheme(theme: Omit<DeckTheme, "id">) {

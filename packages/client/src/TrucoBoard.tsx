@@ -497,7 +497,7 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
               pointerEvents: "none",
             }}
           >
-            {t("table.arena", { name: activeMatOwnerName })}
+            {t("table.arena", { name: activeMatOwnerName })} | 🎴 Deck: {activeDeckTheme.name}
           </div>
 
 
@@ -669,13 +669,32 @@ export function TrucoBoard({ G, ctx, moves, playerID }: BoardProps<TrucoGameStat
               ) : (
                 /* 2-Player 1v1 Table */
                 <>
-                  <div style={{ display: "flex", justifyContent: "center", marginBottom: "10px" }}>
+                  <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "14px", marginBottom: "10px" }}>
                     <VideoAvatar
                       stream={null}
                       username={`Player ${opponentID}`}
                       size={52}
                       isCurrentTurn={ctx.currentPlayer === opponentID}
                     />
+
+                    {/* Opponent Face-down Hand Cards using selected deck cardBackUrl */}
+                    <div style={{ display: "flex", gap: "6px" }}>
+                      {(G.hands[opponentID] || []).map((_, idx) => (
+                        <div
+                          key={`opp-hand-back-${idx}`}
+                          style={{
+                            width: "32px",
+                            height: "48px",
+                            borderRadius: "6px",
+                            background: activeDeckTheme.cardBackUrl.startsWith("http") || activeDeckTheme.cardBackUrl.startsWith("data:")
+                              ? `url("${activeDeckTheme.cardBackUrl}") center/cover`
+                              : activeDeckTheme.cardBackUrl,
+                            border: "1px solid rgba(255, 255, 255, 0.3)",
+                            boxShadow: "0 2px 6px rgba(0,0,0,0.5)",
+                          }}
+                        />
+                      ))}
+                    </div>
                   </div>
                   <div style={{ fontSize: "0.85rem", color: "#cbd5e1", marginBottom: "8px", textShadow: "0 1px 3px rgba(0,0,0,0.8)" }}>
                     {t("table.opponent_cards", { id: opponentID })}
