@@ -236,61 +236,7 @@ export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps
         </div>
       )}
 
-      {/* Floating Active Event Notice (Atorado, Fold, Showdown) */}
-      {G.activeNotice && !G.handOver && (
-        <div
-          key={G.activeNotice.id}
-          style={{
-            position: "fixed",
-            top: "24px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            zIndex: 1000,
-            width: "90%",
-            maxWidth: "540px",
-            background:
-              G.activeNotice.type === "atorado"
-                ? "linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(120, 53, 15, 0.98))"
-                : G.activeNotice.type === "mazo"
-                ? "linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(127, 29, 29, 0.98))"
-                : G.activeNotice.type === "envido"
-                ? "linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(30, 58, 138, 0.98))"
-                : "linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(20, 83, 45, 0.98))",
-            backdropFilter: "blur(16px)",
-            border:
-              G.activeNotice.type === "atorado"
-                ? "2px solid #f59e0b"
-                : G.activeNotice.type === "mazo"
-                ? "2px solid #ef4444"
-                : "2px solid #3b82f6",
-            boxShadow: "0 16px 48px rgba(0,0,0,0.6)",
-            borderRadius: "20px",
-            padding: "12px 20px",
-            textAlign: "center",
-            color: "#ffffff",
-          }}
-        >
-          <div
-            style={{
-              fontSize: "1.1rem",
-              fontWeight: "bold",
-              marginBottom: "4px",
-              color:
-                G.activeNotice.type === "atorado"
-                  ? "#f59e0b"
-                  : G.activeNotice.type === "mazo"
-                  ? "#f87171"
-                  : "#60a5fa",
-              letterSpacing: "0.5px",
-            }}
-          >
-            {G.activeNotice.title}
-          </div>
-          <div style={{ fontSize: "0.85rem", lineHeight: "1.3", color: "#f1f5f9" }}>
-            {G.activeNotice.message}
-          </div>
-        </div>
-      )}
+
 
       {/* Main Game Layout: Left Sidebar + Arena Mat + Right Log Sidebar */}
       <div
@@ -564,6 +510,55 @@ export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps
           >
             {t("table.arena", { name: activeMatOwnerName })} | 🎴 Deck: {activeDeckTheme.name}
           </div>
+
+          {/* Subtle Compact Floating Event Notice (Envido Showdown, Fold, Atorado) */}
+          {G.activeNotice && !G.handOver && (
+            <div
+              key={G.activeNotice.id}
+              style={{
+                position: "absolute",
+                top: "46px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                zIndex: 10,
+                background: "rgba(15, 23, 42, 0.88)",
+                backdropFilter: "blur(10px)",
+                border:
+                  G.activeNotice.type === "atorado"
+                    ? "1px solid #f59e0b"
+                    : G.activeNotice.type === "mazo"
+                    ? "1px solid #ef4444"
+                    : "1px solid #3b82f6",
+                borderRadius: "12px",
+                padding: "5px 14px",
+                textAlign: "center",
+                color: "#ffffff",
+                boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
+                pointerEvents: "none",
+                maxWidth: "440px",
+                width: "max-content",
+                animation: "fadeIn 0.2s ease-out",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "0.75rem",
+                  fontWeight: "bold",
+                  color:
+                    G.activeNotice.type === "atorado"
+                      ? "#f59e0b"
+                      : G.activeNotice.type === "mazo"
+                      ? "#f87171"
+                      : "#60a5fa",
+                }}
+              >
+                {G.activeNotice.title}
+              </div>
+              <div style={{ fontSize: "0.7rem", color: "#cbd5e1", marginTop: "1px" }}>
+                {G.activeNotice.message}
+              </div>
+            </div>
+          )}
 
 
           {/* Table Content Wrapper */}
