@@ -8,7 +8,8 @@
   "scripts": {
     "dev:server": "npm run dev --workspace=server",
     "dev:client": "npm run dev --workspace=client",
-    "build:shared": "npm run build --workspace=shared"
+    "build:shared": "npm run build --workspace=shared",
+    "build": "npm run build:shared && npm run build --workspace=client"
   },
   "devDependencies": {
     "typescript": "^5.5.4"
