@@ -5,7 +5,7 @@ import { supabase } from "../supabaseClient.js";
 const STORAGE_CONFIG_KEY = "truco_object_storage_config";
 
 export const DEFAULT_STORAGE_CONFIG: ObjectStorageConfig = {
-  provider: "supabase",
+  provider: "supabase-storage",
   endpointUrl: "https://<your-project-id>.supabase.co/storage/v1",
   bucketName: "peligroso-storage",
   publicCdnDomain: "",
@@ -47,7 +47,7 @@ export function StorageProvider({ children }: { children: React.ReactNode }) {
     const filePath = `${folder}/${Date.now()}-${sanitizeName}`;
 
     // 1. Supabase Object Storage Upload
-    if (storageConfig.isEnabled && storageConfig.provider === "supabase" && supabase) {
+    if (storageConfig.isEnabled && storageConfig.provider === "supabase-storage" && supabase) {
       const bucketName = storageConfig.bucketName || "peligroso-storage";
       const { data, error } = await supabase.storage.from(bucketName).upload(filePath, file, {
         cacheControl: "3600",
