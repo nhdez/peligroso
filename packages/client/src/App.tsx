@@ -322,7 +322,6 @@ function MainApp() {
           <h1 style={{ margin: 0, fontSize: "1.6rem", color: "#f59e0b", letterSpacing: "1px" }}>
             {t("app.title")}
           </h1>
-          <span style={{ fontSize: "1.2rem" }}>{getCountryFlag(profile?.country_code)}</span>
         </div>
 
         {/* Right Header Controls */}
