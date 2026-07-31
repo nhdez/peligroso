@@ -158,4 +158,31 @@ CREATE POLICY "Public Read Game Chat Messages" ON public.game_chat_messages FOR 
 DROP POLICY IF EXISTS "Public Insert Game Chat Messages" ON public.game_chat_messages;
 CREATE POLICY "Public Insert Game Chat Messages" ON public.game_chat_messages FOR INSERT WITH CHECK (true);
 
+-- ============================================================================
+-- 10. REAL-TIME MATCHMAKING QUEUE PERSISTENCE
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS public.matchmaking_queue (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  room_id TEXT UNIQUE NOT NULL,
+  player1_id TEXT NOT NULL,
+  player1_name TEXT NOT NULL,
+  player2_id TEXT,
+  player2_name TEXT,
+  status TEXT NOT NULL DEFAULT 'waiting' CHECK (status IN ('waiting', 'paired', 'cancelled')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE public.matchmaking_queue ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public Read Matchmaking Queue" ON public.matchmaking_queue;
+CREATE POLICY "Public Read Matchmaking Queue" ON public.matchmaking_queue FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public Insert Matchmaking Queue" ON public.matchmaking_queue;
+CREATE POLICY "Public Insert Matchmaking Queue" ON public.matchmaking_queue FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public Update Matchmaking Queue" ON public.matchmaking_queue;
+CREATE POLICY "Public Update Matchmaking Queue" ON public.matchmaking_queue FOR UPDATE USING (true);
+
+
 
