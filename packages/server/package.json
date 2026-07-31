@@ -4,6 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
+    "build:shared": "npm run build --workspace=shared",
+    "prebuild": "npm run build:shared",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js"
   },
