@@ -417,6 +417,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await persistProfile(updated);
   }
 
+  async function updateVictoryShowcase(image: string, youtube: string, quote: string) {
+    if (!profile) return;
+    const updated: UserProfile = {
+      ...profile,
+      victory_image_url: image,
+      victory_youtube_url: youtube,
+      victory_quote: quote,
+    };
+    await persistProfile(updated);
+  }
+
   async function addCredits(amount: number) {
     if (!profile) return;
     const newCredits = (profile.credits || 0) + amount;
