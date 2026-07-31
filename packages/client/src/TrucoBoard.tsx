@@ -142,6 +142,20 @@ export function TrucoBoard({ G, ctx, moves, playerID, onLeaveMatch }: BoardProps
     }
   }, [G.handOver, G.handNumber, G.winner, moves]);
 
+  const { updateStats } = useAuth();
+  const [statsRecorded, setStatsRecorded] = useState(false);
+
+  useEffect(() => {
+    if (ctx.gameover && !statsRecorded) {
+      setStatsRecorded(true);
+      const winnerTeam = String(ctx.gameover.winner);
+      const myTeam = String(teamOf(myID, G.numPlayers));
+      const won = winnerTeam === myTeam;
+      const isAI = Boolean((G as any).isAI || (G as any).isVsAI);
+      updateStats(won, isAI);
+    }
+  }, [ctx.gameover, statsRecorded, myID, G.numPlayers, updateStats]);
+
   const player0MatUrl = profile?.custom_mat_url || PRESET_MATS[0].url;
   const player0MatOpacity = profile?.mat_opacity ?? 0.85;
 

@@ -91,7 +91,7 @@ function useAIBots(matchID: string, aiSeats: string[], numPlayers: number, activ
 
       if (state.ctx.gameover && !statsRecorded) {
         statsRecorded = true;
-        updateStats(state.ctx.gameover.winner === "0");
+        updateStats(state.ctx.gameover.winner === "0", true); // AI matches DO NOT count towards ELO/stats
         return;
       }
 

@@ -87,7 +87,7 @@ interface AuthContextType {
   signUp: (email: string, pass: string, username: string) => Promise<{ error: string | null }>;
   signInAsGuest: (username?: string) => void;
   signOut: () => Promise<void>;
-  updateStats: (won: boolean) => void;
+  updateStats: (won: boolean, isVsAI?: boolean, opponentElo?: number) => void;
   updateCustomization: (deckId: string, matUrl: string, opacity: number) => Promise<void>;
   updateCountry: (countryCode: string) => Promise<void>;
   updateAvatar: (avatarUrl: string) => Promise<void>;
@@ -123,55 +123,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [allUsers, setAllUsers] = useState<UserProfile[]>(() => {
     const saved = localStorage.getItem(USERS_STORAGE_KEY);
     if (saved) {
-      try { return JSON.parse(saved); } catch {}
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed.filter((u: UserProfile) => u && u.id && !u.id.startsWith("bot-"));
+        }
+      } catch {}
     }
-    return [
-      {
-        id: "bot-1",
-        username: "ElGaucho_AR",
-        display_name: "ElGaucho_AR",
-        elo_rating: 1450,
-        matches_played: 28,
-        matches_won: 20,
-        is_guest: false,
-        role: "user",
-        is_banned: false,
-        selected_deck_id: "classic-gold",
-        custom_mat_url: PRESET_MATS[0].url,
-        mat_opacity: 0.85,
-        country_code: "AR",
-      },
-      {
-        id: "bot-2",
-        username: "ElMate_UY",
-        display_name: "ElMate_UY",
-        elo_rating: 1390,
-        matches_played: 22,
-        matches_won: 15,
-        is_guest: false,
-        role: "user",
-        is_banned: false,
-        selected_deck_id: "royal-crimson",
-        custom_mat_url: PRESET_MATS[1].url,
-        mat_opacity: 0.85,
-        country_code: "UY",
-      },
-      {
-        id: "bot-3",
-        username: "TrucoMaster_ES",
-        display_name: "TrucoMaster_ES",
-        elo_rating: 1310,
-        matches_played: 18,
-        matches_won: 11,
-        is_guest: false,
-        role: "user",
-        is_banned: false,
-        selected_deck_id: "cyber-neon",
-        custom_mat_url: PRESET_MATS[3].url,
-        mat_opacity: 0.85,
-        country_code: "ES",
-      },
-    ];
+    return [];
   });
 
   useEffect(() => {
@@ -182,9 +141,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(allUsers));
   }, [allUsers]);
 
-  // Initialize Auth state
+  // Initialize Auth state & load global player standings
   useEffect(() => {
     if (isSupabaseConfigured && supabase) {
+      // Load real profiles for Global Leaderboard
+      supabase
+        .from("profiles")
+        .select("*")
+        .order("elo_rating", { ascending: false })
+        .then(({ data, error }) => {
+          if (data && data.length > 0 && !error) {
+            const formatted: UserProfile[] = data.map((d: any) => ({
+              id: d.id,
+              username: d.username || "Player",
+              display_name: d.display_name || d.username || "Player",
+              elo_rating: d.elo_rating ?? 1200,
+              matches_played: d.matches_played ?? 0,
+              matches_won: d.matches_won ?? 0,
+              is_guest: false,
+              role: d.role || "user",
+              is_banned: d.is_banned ?? false,
+              selected_deck_id: d.selected_deck_id || "classic-gold",
+              custom_mat_url: d.custom_mat_url || PRESET_MATS[0].url,
+              mat_opacity: d.mat_opacity ?? 0.85,
+              country_code: d.country_code || "",
+              credits: d.credits ?? 1000,
+            }));
+            setAllUsers(formatted);
+          }
+        });
+
       supabase.auth.getSession().then(({ data: { session } }) => {
         setSession(session);
         setUser(session?.user ?? null);
@@ -346,16 +332,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     createGuestProfile();
   }
 
-  function updateStats(won: boolean) {
-    if (!profile) return;
+  function updateStats(won: boolean, isVsAI: boolean = false, opponentElo: number = 1200) {
+    // CRITICAL: AI matches DO NOT count for rating or win/loss records!
+    if (isVsAI || !profile) return;
+
+    // Standard ELO System Calculation (K=32)
+    const K = 32;
+    const expected = 1 / (1 + Math.pow(10, (opponentElo - profile.elo_rating) / 400));
+    const actual = won ? 1 : 0;
+    const eloDelta = Math.round(K * (actual - expected));
+    const newElo = Math.max(100, profile.elo_rating + eloDelta);
+
     const updated: UserProfile = {
       ...profile,
       matches_played: profile.matches_played + 1,
       matches_won: profile.matches_won + (won ? 1 : 0),
-      elo_rating: profile.elo_rating + (won ? 15 : -10),
+      elo_rating: newElo,
     };
+
     setProfile(updated);
-    setAllUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+    setAllUsers((prev) => {
+      const exists = prev.some((u) => u.id === updated.id);
+      return exists
+        ? prev.map((u) => (u.id === updated.id ? updated : u))
+        : [...prev, updated];
+    });
 
     if (profile.is_guest) {
       localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(updated));
