@@ -12,10 +12,40 @@ const server = Server({
   origins: [Origins.LOCALHOST, "https://peligroso-client.vercel.app"],
 });
 
-// Add Koa bodyparser and custom routes for Square payments processing
+// Add Koa bodyparser and custom routes
 server.app.use(bodyParser());
 
 const router = new Router();
+
+// Active Online Users Presence Tracker Map (Stores userId/sessionId -> lastSeen timestamp)
+const onlinePresences = new Map<string, number>();
+
+function pruneStalePresences() {
+  const now = Date.now();
+  for (const [id, lastSeen] of onlinePresences.entries()) {
+    if (now - lastSeen > 15000) { // 15 seconds expiry
+      onlinePresences.delete(id);
+    }
+  }
+}
+
+// Presence Heartbeat Endpoint for registered and guest users
+router.post("/api/presence/heartbeat", async (ctx: any) => {
+  const { userId } = ctx.request.body || {};
+  const clientKey = userId || ctx.ip || `anon-${Math.random()}`;
+  onlinePresences.set(clientKey, Date.now());
+  pruneStalePresences();
+
+  ctx.status = 200;
+  ctx.body = { onlineCount: Math.max(1, onlinePresences.size) };
+});
+
+// Presence Online Count GET Endpoint
+router.get("/api/presence/online-count", async (ctx: any) => {
+  pruneStalePresences();
+  ctx.status = 200;
+  ctx.body = { onlineCount: Math.max(1, onlinePresences.size) };
+});
 
 // Square Payment Processing API Endpoint
 router.post("/api/payments/square/process", async (ctx: any) => {

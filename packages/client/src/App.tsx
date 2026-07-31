@@ -180,6 +180,32 @@ function MainApp() {
     }
   });
 
+  const [onlineCount, setOnlineCount] = useState<number>(1);
+
+  useEffect(() => {
+    async function sendHeartbeat() {
+      try {
+        const res = await fetch(`${SERVER_URL}/api/presence/heartbeat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: profile?.id || "guest" }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.onlineCount) {
+            setOnlineCount(data.onlineCount);
+          }
+        }
+      } catch {
+        setOnlineCount((prev) => (prev < 1 ? 1 : prev));
+      }
+    }
+
+    sendHeartbeat();
+    const interval = setInterval(sendHeartbeat, 5000);
+    return () => clearInterval(interval);
+  }, [profile?.id]);
+
   useEffect(() => {
     if (mode !== "lobby") {
       const session = { matchID: activeMatchID, playerID, mode, timestamp: Date.now() };
@@ -259,10 +285,29 @@ function MainApp() {
           marginBottom: "24px",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
           <h1 style={{ margin: 0, fontSize: "1.6rem", color: "#f59e0b", letterSpacing: "1px" }}>
             {t("app.title")}
           </h1>
+
+          {/* Live Online Users Badge (Registered + Guests) */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              background: "rgba(34, 197, 94, 0.15)",
+              border: "1px solid rgba(34, 197, 94, 0.4)",
+              padding: "4px 12px",
+              borderRadius: "12px",
+              fontSize: "0.8rem",
+              color: "#4ade80",
+              fontWeight: "bold",
+            }}
+          >
+            <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#22c55e", boxShadow: "0 0 8px #22c55e", display: "inline-block" }} />
+            <span>{onlineCount} {onlineCount === 1 ? "Player" : "Players"} Online</span>
+          </div>
         </div>
 
         {/* Right Header Controls */}
