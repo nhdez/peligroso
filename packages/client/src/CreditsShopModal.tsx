@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { useAuth } from "./AuthContext.js";
 import { useI18n } from "./i18n/I18nContext.js";
 
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:8000";
+
 interface CreditPackage {
   id: string;
   name: string;
@@ -42,14 +44,26 @@ export function CreditsShopModal({ onClose }: { onClose: () => void }) {
     setSuccessMessage(null);
 
     try {
-      // Simulate Square Payment processing token delay for UI feedback
-      await new Promise((resolve) => setTimeout(resolve, 1400));
+      const res = await fetch(`${SERVER_URL}/api/payments/square/process`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sourceId: "cnon:card-nonce-ok",
+          usdAmount: usdVal,
+          userId: profile?.id || "guest",
+        }),
+      });
 
-      // Grant credits to user profile
-      await addCredits(totalCredits);
-
-      setSuccessMessage(`Success! Purchased ${totalCredits.toLocaleString()} credits for $${usdVal.toFixed(2)} USD via Square.`);
-      setCustomUsd("");
+      if (res.ok) {
+        const data = await res.json();
+        const granted = data.creditsGranted || totalCredits;
+        await addCredits(granted);
+        setSuccessMessage(`Success! Purchased ${granted.toLocaleString()} credits for $${usdVal.toFixed(2)} USD via Square (ID: ${data.paymentId || "sq_pay"}).`);
+        setCustomUsd("");
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Payment server returned an error.");
+      }
     } catch (err: any) {
       setErrorMessage(err?.message || "Payment processing failed. Please try again.");
     } finally {
